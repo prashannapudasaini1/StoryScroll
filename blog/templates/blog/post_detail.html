@@ -1,0 +1,177 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - StoryScroll{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+    <div class="mb-3">
+        <a href="{% url 'reader_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- Post Content -->
+    <div class="card mb-4">
+        {% if post.featured_image %}
+        <img src="{{ post.featured_image.url }}" class="card-img-top" alt="{{ post.title }}" style="max-height: 400px; object-fit: cover;">
+        {% endif %}
+        <div class="card-body">
+            <h1 class="card-title">{{ post.title }}</h1>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-person"></i> <strong>{{ post.author.username }}</strong> | 
+                        <i class="bi bi-tag"></i> {{ post.category }} | 
+                        <i class="bi bi-calendar"></i> {{ post.created_at|date:"M d, Y" }}
+                    </p>
+                </div>
+                <div>
+                    {% if user.role == 'Reader' %}
+                    <button class="btn btn-outline-danger like-btn {% if is_liked %}liked{% endif %}" 
+                            data-post-id="{{ post.id }}" id="likeBtn">
+                        <i class="bi bi-heart{% if is_liked %}-fill{% endif %}"></i> 
+                        <span id="likeCount">{{ post.get_like_count }}</span>
+                    </button>
+                    {% if post.author.role == 'Writer' %}
+                    <button class="btn {% if is_following %}btn-primary{% else %}btn-outline-primary{% endif %} ms-2 follow-btn" 
+                            data-author-id="{{ post.author.id }}" id="followBtn">
+                        <i class="bi bi-person-{% if is_following %}check{% else %}plus{% endif %}"></i> 
+                        {% if is_following %}Following{% else %}Follow{% endif %}
+                    </button>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <hr>
+            <div class="card-text" style="line-height: 1.8; font-size: 1.1rem;">
+                {{ post.content|linebreaks }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comments Section -->
+    {% if user.role == 'Reader' %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4><i class="bi bi-chat-dots"></i> Comments</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{% url 'add_comment' post.id %}" class="mb-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="3" placeholder="Write a comment..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Post Comment
+                </button>
+            </form>
+            
+            <hr>
+            
+            {% if comments %}
+                {% for comment in comments %}
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong>{{ comment.user.username }}</strong>
+                            <small class="text-muted ms-2">{{ comment.created_at|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <p class="mb-0">{{ comment.content }}</p>
+                    
+                    <!-- Replies -->
+                    {% if comment.replies.all %}
+                    <div class="mt-3 ms-4">
+                        {% for reply in comment.replies.all %}
+                        <div class="card bg-light mb-2">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ reply.user.username }}</strong>
+                                        <small class="text-muted ms-2">{{ reply.created_at|timesince }} ago</small>
+                                        <p class="mb-0 mt-1">{{ reply.content }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">No comments yet. Be the first to comment!</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Like/Unlike functionality (only for Readers)
+    const likeBtn = document.getElementById('likeBtn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            fetch(`/post/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeCount = document.getElementById('likeCount');
+                
+                if (data.liked) {
+                    likeBtn.classList.add('liked');
+                    likeBtn.innerHTML = '<i class="bi bi-heart-fill"></i> ' + data.like_count;
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeBtn.innerHTML = '<i class="bi bi-heart"></i> ' + data.like_count;
+                }
+                if (likeCount) {
+                    likeCount.textContent = data.like_count;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+    
+    // Follow/Unfollow functionality (only for Readers)
+    const followBtn = document.getElementById('followBtn');
+    if (followBtn) {
+        followBtn.addEventListener('click', function() {
+            const authorId = this.getAttribute('data-author-id');
+            fetch(`/author/${authorId}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.following) {
+                    followBtn.innerHTML = '<i class="bi bi-person-check"></i> Following';
+                    followBtn.classList.remove('btn-outline-primary');
+                    followBtn.classList.add('btn-primary');
+                } else {
+                    followBtn.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
+                    followBtn.classList.remove('btn-primary');
+                    followBtn.classList.add('btn-outline-primary');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+</script>
+{% endblock %}
+

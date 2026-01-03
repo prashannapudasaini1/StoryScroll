@@ -1,0 +1,54 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Login - StoryScroll{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h1 class="display-4 text-primary">
+                        <i class="bi bi-book"></i> StoryScroll
+                    </h1>
+                    <p class="text-muted">Welcome back! Please login to continue.</p>
+                </div>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username or Email</label>
+                        <input type="text" class="form-control" id="username" name="username" required autofocus placeholder="Enter username or email">
+                        <small class="text-muted">You can login with either your username or email address</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-lg mb-3">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </button>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="text-muted mb-3">Don't have an account?</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'register_writer' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil-square"></i> Register as Writer
+                        </a>
+                        <a href="{% url 'register_reader' %}" class="btn btn-outline-info">
+                            <i class="bi bi-book-open"></i> Register as Reader
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
