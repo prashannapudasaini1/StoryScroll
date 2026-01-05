@@ -27,16 +27,26 @@
             <div class="mb-3">
               <label for="category" class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
               <select class="form-select rounded-3" id="category" name="category" required>
-                <option value="Technology" {% if post.category == 'Technology' %}selected{% endif %}>Technology</option>
-                <option value="Lifestyle" {% if post.category == 'Lifestyle' %}selected{% endif %}>Lifestyle</option>
-                <option value="Travel" {% if post.category == 'Travel' %}selected{% endif %}>Travel</option>
-                <option value="Food" {% if post.category == 'Food' %}selected{% endif %}>Food</option>
-                <option value="Fashion" {% if post.category == 'Fashion' %}selected{% endif %}>Fashion</option>
-                <option value="Health" {% if post.category == 'Health' %}selected{% endif %}>Health</option>
-                <option value="Education" {% if post.category == 'Education' %}selected{% endif %}>Education</option>
-                <option value="Business" {% if post.category == 'Business' %}selected{% endif %}>Business</option>
-                <option value="Entertainment" {% if post.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
-                <option value="Other" {% if post.category == 'Other' %}selected{% endif %}>Other</option>
+                {% if categories %}
+                  {% for cat in categories %}
+                    {% if cat.name %}
+                      <option value="{{ cat.name }}" {% if post.category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                    {% else %}
+                      <option value="{{ cat }}" {% if post.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <option value="Technology" {% if post.category == 'Technology' %}selected{% endif %}>Technology</option>
+                  <option value="Lifestyle" {% if post.category == 'Lifestyle' %}selected{% endif %}>Lifestyle</option>
+                  <option value="Travel" {% if post.category == 'Travel' %}selected{% endif %}>Travel</option>
+                  <option value="Food" {% if post.category == 'Food' %}selected{% endif %}>Food</option>
+                  <option value="Fashion" {% if post.category == 'Fashion' %}selected{% endif %}>Fashion</option>
+                  <option value="Health" {% if post.category == 'Health' %}selected{% endif %}>Health</option>
+                  <option value="Education" {% if post.category == 'Education' %}selected{% endif %}>Education</option>
+                  <option value="Business" {% if post.category == 'Business' %}selected{% endif %}>Business</option>
+                  <option value="Entertainment" {% if post.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                  <option value="Other" {% if post.category == 'Other' %}selected{% endif %}>Other</option>
+                {% endif %}
               </select>
             </div>
 

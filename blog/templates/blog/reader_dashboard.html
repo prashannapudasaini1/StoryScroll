@@ -37,9 +37,11 @@
                         </a>
                     </li>
                 </ul>
-                <form class="d-flex" method="GET" action="{% url 'reader_dashboard' %}">
+                <form class="d-flex" method="GET" action="{% url 'reader_dashboard' %}" style="flex-wrap: wrap; gap: 0.5rem;">
+                    <input type="text" class="form-control me-2" name="search" placeholder="Search by title, author, or category..." 
+                           value="{{ search_query }}" style="min-width: 250px;">
                     <select class="form-select me-2" name="author" style="max-width: 200px;">
-                        <option value="">Search by Author</option>
+                        <option value="">All Authors</option>
                         {% for author in authors %}
                         <option value="{{ author.id }}" {% if selected_author == author.id|stringformat:"s" %}selected{% endif %}>
                             {{ author.username }}
@@ -49,8 +51,8 @@
                     <button class="btn btn-outline-primary" type="submit">
                         <i class="bi bi-search"></i> Search
                     </button>
-                    {% if selected_category or selected_author or followed_only %}
-                    <a href="{% url 'reader_dashboard' %}" class="btn btn-outline-secondary ms-2">
+                    {% if selected_category or selected_author or followed_only or search_query %}
+                    <a href="{% url 'reader_dashboard' %}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-circle"></i> Clear
                     </a>
                     {% endif %}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Post, Comment, Like, Follow
+from .models import User, Post, Comment, Like, Follow, Category
 
 
 @admin.register(User)
@@ -31,4 +31,9 @@ class LikeAdmin(admin.ModelAdmin):
 class FollowAdmin(admin.ModelAdmin):
     list_display = ['follower', 'followed_author', 'created_at']
 
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'description', 'created_at']
+    search_fields = ['name', 'description']
 

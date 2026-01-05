@@ -3,6 +3,12 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import FileExtensionValidator
 
 
+class UserManager(models.Manager):
+    """Custom manager to exclude deleted users by default"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class User(AbstractUser):
     """Custom User model with role-based access control
     
@@ -38,6 +44,12 @@ class User(AbstractUser):
     is_approved = models.BooleanField(default=False)  # For Reader approval by Admin
     writer_request = models.BooleanField(default=False)  # Reader requesting to become Writer
     writer_request_message = models.TextField(blank=True, null=True)  # Optional message for writer request
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    objects = UserManager()
+    all_objects = models.Manager()  # Manager to access all including deleted
     
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -51,8 +63,41 @@ class User(AbstractUser):
         return ' '.join(filter(None, parts))
 
 
+class CategoryManager(models.Manager):
+    """Custom manager to exclude deleted categories by default"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+class Category(models.Model):
+    """Category model for dynamic category management"""
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    objects = CategoryManager()
+    all_objects = models.Manager()  # Manager to access all including deleted
+    
+    class Meta:
+        verbose_name_plural = 'Categories'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+class PostManager(models.Manager):
+    """Custom manager to exclude deleted posts by default"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class Post(models.Model):
     """Blog post model"""
+    # Legacy choices for backward compatibility
     CATEGORY_CHOICES = [
         ('Technology', 'Technology'),
         ('Lifestyle', 'Lifestyle'),
@@ -69,7 +114,7 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='Other')
+    category = models.CharField(max_length=50, default='Other')  # Store category name as string
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     featured_image = models.ImageField(
@@ -78,6 +123,12 @@ class Post(models.Model):
         null=True,
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif'])]
     )
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    objects = PostManager()
+    all_objects = models.Manager()  # Manager to access all including deleted
     
     class Meta:
         ordering = ['-created_at']
@@ -96,6 +147,12 @@ class Post(models.Model):
         return self.likes.filter(user=user).exists()
 
 
+class CommentManager(models.Manager):
+    """Custom manager to exclude deleted comments by default"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class Comment(models.Model):
     """Comment model with support for replies"""
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
@@ -103,6 +160,12 @@ class Comment(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    objects = CommentManager()
+    all_objects = models.Manager()  # Manager to access all including deleted
     
     class Meta:
         ordering = ['created_at']

@@ -20,6 +20,12 @@ urlpatterns = [
     path('system/approve-reader/<int:user_id>/', views.approve_reader, name='approve_reader'),
     path('system/approve-writer-request/<int:user_id>/', views.approve_writer_request, name='approve_writer_request'),
     path('system/reject-writer-request/<int:user_id>/', views.reject_writer_request, name='reject_writer_request'),
+    path('system/create-admin/', views.create_admin, name='create_admin'),
+    path('system/add-category/', views.add_category, name='add_category'),
+    path('system/delete-category/<int:category_id>/', views.delete_category, name='delete_category'),
+    path('system/restore-user/<int:user_id>/', views.restore_user, name='restore_user'),
+    path('system/restore-post/<int:post_id>/', views.restore_post, name='restore_post'),
+    path('system/restore-category/<int:category_id>/', views.restore_category, name='restore_category'),
     
     # Writer routes
     path('writer/dashboard/', views.writer_dashboard, name='writer_dashboard'),
