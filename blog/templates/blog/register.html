@@ -1,124 +1,181 @@
+
 {% extends 'blog/base.html' %}
 
 {% block title %}{{ title }} - StoryScroll{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <h1 class="display-5 text-primary">
-                        <i class="bi bi-person-plus"></i> {{ title }}
-                    </h1>
-                    <p class="text-muted">
-                        {% if user_type == 'Writer' %}
-                            Create your writer account and start publishing!
-                        {% else %}
-                            Create your reader account (requires admin approval)
-                        {% endif %}
-                    </p>
-                </div>
-                
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="id_first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-                            {{ form.first_name }}
-                            {% if form.first_name.errors %}
-                                <div class="text-danger small">{{ form.first_name.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label for="id_middle_name" class="form-label">Middle Name</label>
-                            {{ form.middle_name }}
-                            {% if form.middle_name.errors %}
-                                <div class="text-danger small">{{ form.middle_name.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label for="id_last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-                            {{ form.last_name }}
-                            {% if form.last_name.errors %}
-                                <div class="text-danger small">{{ form.last_name.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="id_email" class="form-label">Email <span class="text-danger">*</span></label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="text-danger small">{{ form.email.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> 
-                        <strong>Note:</strong> Your username will be automatically generated based on your name (e.g., john_doe_1234). 
-                        You can login with either your email or the generated username.
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="id_phone_number" class="form-label">Phone Number</label>
-                            {{ form.phone_number }}
-                            {% if form.phone_number.errors %}
-                                <div class="text-danger small">{{ form.phone_number.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="id_gender" class="form-label">Gender</label>
-                            {{ form.gender }}
-                            {% if form.gender.errors %}
-                                <div class="text-danger small">{{ form.gender.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="id_password" class="form-label">Password <span class="text-danger">*</span></label>
-                            {{ form.password }}
-                            <small class="text-muted">Minimum 8 characters</small>
-                            {% if form.password.errors %}
-                                <div class="text-danger small">{{ form.password.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="id_password_confirm" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            {{ form.password_confirm }}
-                            {% if form.password_confirm.errors %}
-                                <div class="text-danger small">{{ form.password_confirm.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
-                        </div>
-                    {% endif %}
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
-                        <a href="{% url 'login' %}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Login
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-person-plus"></i> Register
-                        </button>
-                    </div>
-                </form>
+<section class="register-section py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 col-xl-9">
+        <div class="register-card card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4 p-md-5">
+
+            <!-- Header -->
+            <div class="text-center mb-4">
+              <h1 class="display-5 fw-bold text-dark mb-2">Join StoryScroll</h1>
+              <p class="text-muted mb-0">
+                {% if user_type == 'Writer' %}
+                  Create your writer account and start publishing your stories to the world.
+                {% else %}
+                  Create your reader account (requires admin approval).
+                {% endif %}
+              </p>
             </div>
+
+            <!-- Form -->
+            <form method="POST" novalidate>
+              {% csrf_token %}
+
+              <!-- Name row -->
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label for="id_first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                  {% if form.first_name %}
+                    {# If you use django-widget-tweaks: {{ form.first_name|add_class:"form-control"|attr:"placeholder:John" }} #}
+                    {{ form.first_name }}
+                  {% endif %}
+                  {% if form.first_name.errors %}
+                    <div class="text-danger small">{{ form.first_name.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                  <label for="id_middle_name" class="form-label">Middle Name</label>
+                  {{ form.middle_name }}
+                  {% if form.middle_name.errors %}
+                    <div class="text-danger small">{{ form.middle_name.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                  <label for="id_last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                  {{ form.last_name }}
+                  {% if form.last_name.errors %}
+                    <div class="text-danger small">{{ form.last_name.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="row g-3 mt-1">
+                <div class="col-12">
+                  <label for="id_email" class="form-label">Email <span class="text-danger">*</span></label>
+                  {{ form.email }}
+                  {% if form.email.errors %}
+                    <div class="text-danger small">{{ form.email.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Phone & Gender -->
+              <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                  <label for="id_phone_number" class="form-label">Phone Number</label>
+                  {{ form.phone_number }}
+                  {% if form.phone_number.errors %}
+                    <div class="text-danger small">{{ form.phone_number.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_gender" class="form-label">Gender</label>
+                  {{ form.gender }}
+                  {% if form.gender.errors %}
+                    <div class="text-danger small">{{ form.gender.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Passwords -->
+              <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                  <label for="id_password" class="form-label">Password <span class="text-danger">*</span></label>
+                  {{ form.password }}
+                  <small class="text-muted d-block">Minimum 8 characters</small>
+                  {% if form.password.errors %}
+                    <div class="text-danger small">{{ form.password.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_password_confirm" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                  {{ form.password_confirm }}
+                  {% if form.password_confirm.errors %}
+                    <div class="text-danger small">{{ form.password_confirm.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Non-field errors -->
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger mt-3 mb-0">
+                  {{ form.non_field_errors }}
+                </div>
+              {% endif %}
+
+              <!-- Actions -->
+              <div class="d-flex flex-wrap justify-content-between align-items-center mt-4">
+                <a href="{% url 'login' %}" class="btn btn-link text-decoration-none">
+                  <i class="bi bi-arrow-left"></i> Back to Login
+                </a>
+
+                <button type="submit" class="btn btn-orange px-4 py-2 rounded-3">
+                  <i class="bi bi-person-plus me-1"></i> Register
+                </button>
+              </div>
+
+            </form>
+
+            <!-- Footer link -->
+            <div class="text-center mt-4">
+              <small class="text-muted">Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Sign in here</a></small>
+            </div>
+
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
+</section>
+
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Soft page background like the screenshot */
+  .register-section {
+    background: #f9f5ef; /* warm, soft tint */
+  }
+
+  .register-card {
+    background: #fff;
+    border-radius: 1rem;
+  }
+
+  /* Inputs: ensure consistent look if your form widgets don't already include form-control */
+  .register-card input[type="text"],
+  .register-card input[type="email"],
+  .register-card input[type="password"],
+  .register-card select {
+    /* If widgets already have 'form-control', this will complement the style */
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #e1e1e1;
+    border-radius: 0.5rem;
+    background-color: #fff;
+  }
+
+  /* Orange primary button to match screenshot */
+  .btn-orange {
+    background-color: #f39c12; /* orange */
+    color: #fff;
+    border: none;
+  }
+  .btn-orange:hover {
+    background-color: #e0890b;
+    color: #fff;
+  }
+</style>
+{% endblock %}
