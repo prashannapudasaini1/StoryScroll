@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Post, Comment, Like, Follow, Category
+from .models import User, Post, Comment, Like, Follow, Category, RestoreRequest
 
 
 @admin.register(User)
@@ -36,4 +36,12 @@ class FollowAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'description', 'created_at']
     search_fields = ['name', 'description']
+
+
+@admin.register(RestoreRequest)
+class RestoreRequestAdmin(admin.ModelAdmin):
+    list_display = ['post', 'writer', 'status', 'created_at', 'reviewed_at', 'reviewed_by']
+    list_filter = ['status', 'created_at']
+    search_fields = ['post__title', 'writer__username']
+    readonly_fields = ['created_at', 'reviewed_at']
 

@@ -171,11 +171,16 @@ def writer_dashboard(request):
     posts = Post.objects.filter(author=request.user).order_by('-created_at')
     deleted_posts = Post.all_objects.filter(author=request.user, is_deleted=True).order_by('-deleted_at')
     
-    # Get pending restore requests for this writer
-    pending_restore_requests = RestoreRequest.objects.filter(
-        writer=request.user, 
-        status='Pending'
-    ).values_list('post_id', flat=True)
+    # Get pending restore requests for this writer (with error handling for missing table)
+    try:
+        pending_restore_requests = RestoreRequest.objects.filter(
+            writer=request.user, 
+            status='Pending'
+        ).values_list('post_id', flat=True)
+    except Exception:
+        # Table doesn't exist yet - migrations not applied
+        # This will be resolved once migrations are applied
+        pending_restore_requests = []
     
     context = {
         'posts': posts,
@@ -760,8 +765,15 @@ def admin_dashboard(request):
     # Pending Writer requests (readers requesting to become writers)
     pending_writer_requests = User.objects.filter(role='Reader', writer_request=True).order_by('date_joined')
     
-    # Pending restore requests
-    pending_restore_requests = RestoreRequest.objects.filter(status='Pending').order_by('-created_at')
+    # Pending restore requests (with error handling for missing table)
+    try:
+        pending_restore_requests = RestoreRequest.objects.filter(status='Pending').order_by('-created_at')
+    except Exception as e:
+        # Table doesn't exist yet - migrations not applied
+        # This will be resolved once migrations are applied
+        pending_restore_requests = RestoreRequest.objects.none()
+        if 'no such table' in str(e).lower() or 'does not exist' in str(e).lower():
+            messages.warning(request, 'RestoreRequest table not found. Please run: python manage.py migrate')
     
     # Get all categories
     categories = Category.objects.all().order_by('name')
