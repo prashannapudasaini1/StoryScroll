@@ -308,5 +308,3 @@ For issues, questions, or contributions, please open an issue on the repository.
 - Dynamic category management
 
 ---
-
-**Built with ❤️ using Django**
