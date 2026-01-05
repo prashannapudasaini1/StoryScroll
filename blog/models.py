@@ -1,34 +1,37 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import FileExtensionValidator
 
 
-class UserManager(models.Manager):
-    """Custom manager to exclude deleted users by default"""
+# =========================
+# User Manager
+# =========================
+class UserManager(BaseUserManager):
+    """Custom manager to exclude soft-deleted users by default"""
+
+    use_in_migrations = True
+
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
+# =========================
+# Custom User Model
+# =========================
 class User(AbstractUser):
-    """Custom User model with role-based access control
-    
-    Note: Django's AbstractUser uses Django's built-in password hashing system
-    which is more secure than Werkzeug. The password field is automatically
-    hashed when using user.set_password() and checked with user.check_password().
-    """
     ROLE_CHOICES = [
         ('Admin', 'Admin'),
         ('Writer', 'Writer'),
         ('Reader', 'Reader'),
     ]
-    
+
     GENDER_CHOICES = [
         ('Male', 'Male'),
         ('Female', 'Female'),
         ('Other', 'Other'),
         ('Prefer not to say', 'Prefer not to say'),
     ]
-    
+
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Reader')
     middle_name = models.CharField(max_length=150, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
@@ -38,168 +41,161 @@ class User(AbstractUser):
         upload_to='profile_pics/',
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif'])]
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'gif'])]
     )
-    # Approval system
-    is_approved = models.BooleanField(default=False)  # For Reader approval by Admin
-    writer_request = models.BooleanField(default=False)  # Reader requesting to become Writer
-    writer_request_message = models.TextField(blank=True, null=True)  # Optional message for writer request
+
+    # Approval & workflow
+    is_approved = models.BooleanField(default=False)
+    writer_request = models.BooleanField(default=False)
+    writer_request_message = models.TextField(blank=True, null=True)
+
     # Soft delete
     is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    
-    objects = UserManager()
-    all_objects = models.Manager()  # Manager to access all including deleted
-    
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
+    # Managers
+    objects = UserManager()        # default (filtered)
+    all_objects = BaseUserManager()  # unfiltered
+
     def __str__(self):
         return f"{self.username} ({self.role})"
-    
+
     def get_full_name_with_middle(self):
-        """Get full name including middle name"""
-        parts = [self.first_name]
-        if self.middle_name:
-            parts.append(self.middle_name)
-        parts.append(self.last_name)
-        return ' '.join(filter(None, parts))
+        parts = [self.first_name, self.middle_name, self.last_name]
+        return " ".join(filter(None, parts))
 
 
+# =========================
+# Category
+# =========================
 class CategoryManager(models.Manager):
-    """Custom manager to exclude deleted categories by default"""
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
 class Category(models.Model):
-    """Category model for dynamic category management"""
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
     # Soft delete
     is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
     objects = CategoryManager()
-    all_objects = models.Manager()  # Manager to access all including deleted
-    
+    all_objects = models.Manager()
+
     class Meta:
-        verbose_name_plural = 'Categories'
         ordering = ['name']
-    
+        verbose_name_plural = 'Categories'
+
     def __str__(self):
         return self.name
 
 
+# =========================
+# Post
+# =========================
 class PostManager(models.Manager):
-    """Custom manager to exclude deleted posts by default"""
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
 class Post(models.Model):
-    """Blog post model"""
-    # Legacy choices for backward compatibility
-    CATEGORY_CHOICES = [
-        ('Technology', 'Technology'),
-        ('Lifestyle', 'Lifestyle'),
-        ('Travel', 'Travel'),
-        ('Food', 'Food'),
-        ('Fashion', 'Fashion'),
-        ('Health', 'Health'),
-        ('Education', 'Education'),
-        ('Business', 'Business'),
-        ('Entertainment', 'Entertainment'),
-        ('Other', 'Other'),
-    ]
-    
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
-    category = models.CharField(max_length=50, default='Other')  # Store category name as string
+    category = models.CharField(max_length=50, default='Other')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     featured_image = models.ImageField(
         upload_to='post_images/',
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif'])]
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'gif'])]
     )
+
     # Soft delete
     is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
     objects = PostManager()
-    all_objects = models.Manager()  # Manager to access all including deleted
-    
+    all_objects = models.Manager()
+
     class Meta:
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return self.title
-    
+
     def get_like_count(self):
-        """Get total number of likes for this post"""
         return self.likes.count()
-    
+
     def is_liked_by(self, user):
-        """Check if post is liked by a specific user"""
-        if not user.is_authenticated:
-            return False
-        return self.likes.filter(user=user).exists()
+        return user.is_authenticated and self.likes.filter(user=user).exists()
 
 
+# =========================
+# Comment
+# =========================
 class CommentManager(models.Manager):
-    """Custom manager to exclude deleted comments by default"""
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
 class Comment(models.Model):
-    """Comment model with support for replies"""
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='replies'
+    )
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
     # Soft delete
     is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
     objects = CommentManager()
-    all_objects = models.Manager()  # Manager to access all including deleted
-    
+    all_objects = models.Manager()
+
     class Meta:
         ordering = ['created_at']
-    
+
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.post.title}"
-    
+        return f"{self.user.username} on {self.post.title}"
+
     def is_reply(self):
-        """Check if this comment is a reply"""
         return self.parent is not None
 
 
+# =========================
+# Like
+# =========================
 class Like(models.Model):
-    """Like model for posts"""
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
-        unique_together = ['post', 'user']  # Prevent duplicate likes
-    
+        unique_together = ('post', 'user')
+
     def __str__(self):
         return f"{self.user.username} liked {self.post.title}"
 
 
+# =========================
+# Follow
+# =========================
 class Follow(models.Model):
-    """Follow model for following authors"""
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
     followed_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
-        unique_together = ['follower', 'followed_author']  # Prevent duplicate follows
-    
+        unique_together = ('follower', 'followed_author')
+
     def __str__(self):
         return f"{self.follower.username} follows {self.followed_author.username}"
-
