@@ -101,14 +101,9 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if user.role == 'Reader' %}
-                        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'reader_dashboard' %}">Dashboard</a></li> {% endcomment %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'author_ranking' %}">Author Ranking</a></li>
                     {% elif user.role == 'Writer' %}
-                        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'writer_dashboard' %}">Dashboard</a></li> {% endcomment %}
-                        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'create_post' %}">Create Post</a></li> {% endcomment %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'author_ranking' %}">Author Ranking</a></li>
-                    {% elif user.role == 'Admin' %}
-                        {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a></li> {% endcomment %}
                     {% endif %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
