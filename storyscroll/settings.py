@@ -150,4 +150,17 @@ AUTH_USER_MODEL = 'blog.User'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 
+# Caching Configuration
+# Using local memory cache for development
+# For production, consider using Redis or Memcached
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# Cache timeout (24 hours in seconds)
+CACHE_TIMEOUT = 86400
+
 

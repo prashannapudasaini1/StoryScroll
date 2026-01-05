@@ -6,10 +6,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import User, Post, Comment, Like, Follow, Category
+from django.core.cache import cache
+from .models import User, Post, Comment, Like, Follow, Category, RestoreRequest
 from .decorators import role_required
 from .forms import RegistrationForm, CustomPasswordChangeForm, WriterRequestForm
-from .utils import generate_unique_username
+from .utils import generate_unique_username, get_recommended_posts
 
 
 def login_view(request):
@@ -130,37 +131,6 @@ def logout_view(request):
     return redirect('login')
 
 
-@role_required(['Admin'])
-def admin_dashboard(request):
-    """Admin dashboard with user and post management"""
-    users = User.objects.exclude(id=request.user.id).order_by('-date_joined')
-    posts = Post.objects.all().order_by('-created_at')
-    
-    # Pending Writer approvals (writers need approval now)
-    pending_writers = User.objects.filter(role='Writer', is_approved=False).order_by('date_joined')
-    
-    # Pending Writer requests (readers requesting to become writers)
-    pending_writer_requests = User.objects.filter(role='Reader', writer_request=True).order_by('date_joined')
-    
-    # Get all categories
-    categories = Category.objects.all().order_by('name')
-    
-    # Get deleted items for restore section
-    deleted_users = User.all_objects.filter(is_deleted=True).order_by('-deleted_at')
-    deleted_posts = Post.all_objects.filter(is_deleted=True).order_by('-deleted_at')
-    deleted_categories = Category.all_objects.filter(is_deleted=True).order_by('-deleted_at')
-    
-    context = {
-        'users': users,
-        'posts': posts,
-        'pending_writers': pending_writers,
-        'pending_writer_requests': pending_writer_requests,
-        'categories': categories,
-        'deleted_users': deleted_users,
-        'deleted_posts': deleted_posts,
-        'deleted_categories': deleted_categories,
-    }
-    return render(request, 'blog/admin_dashboard.html', context)
 
 
 @role_required(['Admin'])
@@ -199,9 +169,18 @@ def delete_post_admin(request, post_id):
 def writer_dashboard(request):
     """Writer dashboard with post management"""
     posts = Post.objects.filter(author=request.user).order_by('-created_at')
+    deleted_posts = Post.all_objects.filter(author=request.user, is_deleted=True).order_by('-deleted_at')
+    
+    # Get pending restore requests for this writer
+    pending_restore_requests = RestoreRequest.objects.filter(
+        writer=request.user, 
+        status='Pending'
+    ).values_list('post_id', flat=True)
     
     context = {
         'posts': posts,
+        'deleted_posts': deleted_posts,
+        'pending_restore_requests': pending_restore_requests,
     }
     return render(request, 'blog/writer_dashboard.html', context)
 
@@ -378,11 +357,21 @@ def post_detail(request, post_id):
         if post.author.role == 'Writer' and post.author != request.user:
             is_following = Follow.objects.filter(follower=request.user, followed_author=post.author).exists()
     
+    # Get recommended posts with caching (24 hours)
+    cache_key = f'recommended_posts_{post_id}'
+    recommended_posts = cache.get(cache_key)
+    
+    if recommended_posts is None:
+        recommended_posts = get_recommended_posts(post, num_recommendations=5)
+        # Cache for 24 hours (86400 seconds)
+        cache.set(cache_key, recommended_posts, 86400)
+    
     context = {
         'post': post,
         'comments': comments,
         'is_liked': is_liked,
         'is_following': is_following,
+        'recommended_posts': recommended_posts,
     }
     return render(request, 'blog/post_detail.html', context)
 
@@ -691,4 +680,107 @@ def restore_category(request, category_id):
         category.save()
         messages.success(request, f'Category "{category.name}" has been restored.')
     return redirect('admin_dashboard')
+
+
+@role_required(['Writer'])
+def request_restore_post(request, post_id):
+    """Writer requests admin to restore a deleted post"""
+    if request.method == 'POST':
+        post = get_object_or_404(Post.all_objects, id=post_id, author=request.user, is_deleted=True)
+        
+        # Check if there's already a pending request for this post
+        existing_request = RestoreRequest.objects.filter(
+            post=post, 
+            status='Pending'
+        ).first()
+        
+        if existing_request:
+            messages.warning(request, 'You already have a pending restore request for this post.')
+        else:
+            message = request.POST.get('message', '').strip()
+            RestoreRequest.objects.create(
+                post=post,
+                writer=request.user,
+                message=message if message else None,
+                status='Pending'
+            )
+            messages.success(request, 'Restore request submitted successfully! Admin will review it soon.')
+    
+    return redirect('writer_dashboard')
+
+
+@role_required(['Admin'])
+def approve_restore_request(request, request_id):
+    """Admin approves a restore request and restores the post"""
+    if request.method == 'POST':
+        restore_request = get_object_or_404(RestoreRequest, id=request_id, status='Pending')
+        post = restore_request.post
+        
+        # Restore the post
+        post.is_deleted = False
+        post.deleted_at = None
+        post.save()
+        
+        # Update restore request
+        restore_request.status = 'Approved'
+        restore_request.reviewed_at = timezone.now()
+        restore_request.reviewed_by = request.user
+        restore_request.save()
+        
+        messages.success(request, f'Post "{post.title}" has been restored successfully.')
+    return redirect('admin_dashboard')
+
+
+@role_required(['Admin'])
+def reject_restore_request(request, request_id):
+    """Admin rejects a restore request"""
+    if request.method == 'POST':
+        restore_request = get_object_or_404(RestoreRequest, id=request_id, status='Pending')
+        post_title = restore_request.post.title
+        
+        # Update restore request
+        restore_request.status = 'Rejected'
+        restore_request.reviewed_at = timezone.now()
+        restore_request.reviewed_by = request.user
+        restore_request.save()
+        
+        messages.success(request, f'Restore request for "{post_title}" has been rejected.')
+    return redirect('admin_dashboard')
+
+
+@role_required(['Admin'])
+def admin_dashboard(request):
+    """Admin dashboard with user and post management"""
+    users = User.objects.exclude(id=request.user.id).order_by('-date_joined')
+    posts = Post.objects.all().order_by('-created_at')
+    
+    # Pending Writer approvals (writers need approval now)
+    pending_writers = User.objects.filter(role='Writer', is_approved=False).order_by('date_joined')
+    
+    # Pending Writer requests (readers requesting to become writers)
+    pending_writer_requests = User.objects.filter(role='Reader', writer_request=True).order_by('date_joined')
+    
+    # Pending restore requests
+    pending_restore_requests = RestoreRequest.objects.filter(status='Pending').order_by('-created_at')
+    
+    # Get all categories
+    categories = Category.objects.all().order_by('name')
+    
+    # Get deleted items for restore section
+    deleted_users = User.all_objects.filter(is_deleted=True).order_by('-deleted_at')
+    deleted_posts = Post.all_objects.filter(is_deleted=True).order_by('-deleted_at')
+    deleted_categories = Category.all_objects.filter(is_deleted=True).order_by('-deleted_at')
+    
+    context = {
+        'users': users,
+        'posts': posts,
+        'pending_writers': pending_writers,
+        'pending_writer_requests': pending_writer_requests,
+        'pending_restore_requests': pending_restore_requests,
+        'categories': categories,
+        'deleted_users': deleted_users,
+        'deleted_posts': deleted_posts,
+        'deleted_categories': deleted_categories,
+    }
+    return render(request, 'blog/admin_dashboard.html', context)
 

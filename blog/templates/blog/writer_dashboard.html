@@ -82,6 +82,79 @@
       </div>
     </div>
 
+    <!-- Deleted Posts Section -->
+    {% if deleted_posts %}
+    <div class="card soft-card border-0 mt-4">
+      <div class="card-header bg-danger text-white border-0 rounded-top-4">
+        <h3 class="h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-trash me-2"></i> Deleted Posts
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Deleted At</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for post in deleted_posts %}
+              <tr>
+                <td class="fw-semibold">{{ post.title }}</td>
+                <td><span class="badge bg-secondary rounded-pill px-3 py-2">{{ post.category }}</span></td>
+                <td class="text-muted">{{ post.deleted_at|date:"M d, Y H:i" }}</td>
+                <td class="text-end">
+                  {% if post.id in pending_restore_requests %}
+                    <span class="badge bg-warning text-dark">
+                      <i class="bi bi-clock-history me-1"></i> Request Pending
+                    </span>
+                  {% else %}
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#restoreModal{{ post.id }}">
+                      <i class="bi bi-arrow-counterclockwise me-1"></i> Request Restore
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
+              
+              <!-- Restore Request Modal -->
+              <div class="modal fade" id="restoreModal{{ post.id }}" tabindex="-1" aria-labelledby="restoreModalLabel{{ post.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="restoreModalLabel{{ post.id }}">Request Post Restoration</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{% url 'request_restore_post' post.id %}">
+                      {% csrf_token %}
+                      <div class="modal-body">
+                        <p class="mb-3"><strong>Post:</strong> {{ post.title }}</p>
+                        <div class="mb-3">
+                          <label for="message{{ post.id }}" class="form-label">Message (Optional)</label>
+                          <textarea class="form-control" id="message{{ post.id }}" name="message" rows="3" 
+                                    placeholder="Explain why you need this post restored..."></textarea>
+                        </div>
+                        <p class="text-muted small mb-0">Admin will review your request and restore the post if approved.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
   </div>
 </section>
 {% endblock %}

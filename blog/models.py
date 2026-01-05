@@ -222,3 +222,34 @@ class Follow(models.Model):
 
     def __str__(self):
         return f"{self.follower.username} follows {self.followed_author.username}"
+
+
+# =========================
+# Restore Request
+# =========================
+class RestoreRequest(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='restore_requests')
+    writer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='restore_requests')
+    message = models.TextField(blank=True, null=True, help_text="Optional message explaining why restoration is needed")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    reviewed_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='reviewed_restore_requests'
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Restore request for '{self.post.title}' by {self.writer.username} - {self.status}"

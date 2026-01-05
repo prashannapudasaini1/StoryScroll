@@ -150,6 +150,51 @@
       </div>
     {% endif %}
 
+    <!-- Recommended Posts -->
+    {% if recommended_posts %}
+      <div class="card soft-card border-0">
+        <div class="card-header bg-amber-light border-0 rounded-top-4">
+          <h4 class="h5 mb-0 d-flex align-items-center">
+            <i class="bi bi-stars text-orange me-2"></i> Recommended Posts
+          </h4>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            {% for recommended_post in recommended_posts %}
+              <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                  {% if recommended_post.featured_image %}
+                    <img src="{{ recommended_post.featured_image.url }}" 
+                         alt="{{ recommended_post.title }}" 
+                         class="card-img-top" 
+                         style="height: 180px; object-fit: cover;">
+                  {% endif %}
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <a href="{% url 'post_detail' recommended_post.id %}" 
+                         class="text-decoration-none text-dark">
+                        {{ recommended_post.title|truncatewords:10 }}
+                      </a>
+                    </h5>
+                    <p class="card-text text-muted small mb-2">
+                      <i class="bi bi-person me-1"></i>{{ recommended_post.author.username }}
+                      <span class="ms-2">
+                        <i class="bi bi-tag me-1"></i>{{ recommended_post.category }}
+                      </span>
+                    </p>
+                    <a href="{% url 'post_detail' recommended_post.id %}" 
+                       class="btn btn-sm btn-outline-primary">
+                      Read More <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
   </div>
 </section>
 {% endblock %}

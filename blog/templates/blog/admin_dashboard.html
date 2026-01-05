@@ -16,6 +16,9 @@
         <span class="badge rounded-pill bg-info text-white px-3 py-2">
           Writer Requests: {{ pending_writer_requests.count|default:0 }}
         </span>
+        <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+          Restore Requests: {{ pending_restore_requests.count|default:0 }}
+        </span>
         <span class="badge rounded-pill bg-secondary text-white px-3 py-2">
           Users: {{ users|length }}
         </span>
@@ -117,6 +120,58 @@
                   <form method="POST" action="{% url 'reject_writer_request' request_user.id %}" class="d-inline">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger btn-sm rounded-3" onclick="return confirm('Reject this writer request?');">
+                      <i class="bi bi-x-circle me-1"></i> Reject
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Pending Restore Requests -->
+    {% if pending_restore_requests %}
+    <div class="card soft-card mb-4 border-0">
+      <div class="card-header bg-warning text-dark border-0 rounded-top-4">
+        <h3 class="card-title h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-arrow-counterclockwise me-2"></i>
+          Pending Restore Requests ({{ pending_restore_requests.count }})
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Post Title</th>
+                <th>Writer</th>
+                <th>Message</th>
+                <th>Requested At</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for restore_request in pending_restore_requests %}
+              <tr>
+                <td class="fw-semibold">{{ restore_request.post.title|truncatewords:10 }}</td>
+                <td>{{ restore_request.writer.username }}</td>
+                <td class="text-muted">{{ restore_request.message|truncatewords:10|default:"No message" }}</td>
+                <td class="text-muted">{{ restore_request.created_at|date:"M d, Y H:i" }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{% url 'approve_restore_request' restore_request.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm rounded-3">
+                      <i class="bi bi-check-circle me-1"></i> Approve
+                    </button>
+                  </form>
+                  <form method="POST" action="{% url 'reject_restore_request' restore_request.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm rounded-3" 
+                            onclick="return confirm('Reject this restore request?');">
                       <i class="bi bi-x-circle me-1"></i> Reject
                     </button>
                   </form>

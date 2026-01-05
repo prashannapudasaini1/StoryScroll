@@ -26,12 +26,15 @@ urlpatterns = [
     path('system/restore-user/<int:user_id>/', views.restore_user, name='restore_user'),
     path('system/restore-post/<int:post_id>/', views.restore_post, name='restore_post'),
     path('system/restore-category/<int:category_id>/', views.restore_category, name='restore_category'),
+    path('system/approve-restore-request/<int:request_id>/', views.approve_restore_request, name='approve_restore_request'),
+    path('system/reject-restore-request/<int:request_id>/', views.reject_restore_request, name='reject_restore_request'),
     
     # Writer routes
     path('writer/dashboard/', views.writer_dashboard, name='writer_dashboard'),
     path('writer/create-post/', views.create_post, name='create_post'),
     path('writer/edit-post/<int:post_id>/', views.edit_post, name='edit_post'),
     path('writer/delete-post/<int:post_id>/', views.delete_post, name='delete_post'),
+    path('writer/request-restore/<int:post_id>/', views.request_restore_post, name='request_restore_post'),
     path('writer/post/<int:post_id>/comments/', views.view_post_comments, name='view_post_comments'),
     path('writer/reply-comment/<int:comment_id>/', views.reply_comment, name='reply_comment'),
     
