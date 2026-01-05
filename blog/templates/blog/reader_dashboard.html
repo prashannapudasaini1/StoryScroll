@@ -76,8 +76,15 @@
                 <div class="card-body">
                     <h5 class="card-title">{{ post.title|truncatewords:10 }}</h5>
                     <p class="card-text text-muted">
-                        <small>
-                            <i class="bi bi-person"></i> {{ post.author.username }} | 
+                        <small class="d-flex align-items-center gap-2">
+                            {% if post.author.profile_pic %}
+                                <img src="{{ post.author.profile_pic.url }}" alt="{{ post.author.username }}" 
+                                     class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover;">
+                            {% else %}
+                                <i class="bi bi-person"></i>
+                            {% endif %}
+                            <span>{{ post.author.username }}</span>
+                            <span>•</span>
                             <i class="bi bi-tag"></i> {{ post.category }}
                         </small>
                     </p>

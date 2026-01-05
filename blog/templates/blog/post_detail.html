@@ -17,21 +17,26 @@
     <!-- Post -->
     <div class="card soft-card mb-4 border-0">
       {% if post.featured_image %}
-        {{ post.featured_image.url }} {{ post.title }}" class="card-img-top post-hero" />
+        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="card-img-top post-hero" />
       {% endif %}
       <div class="card-body p-4">
         <h1 class="card-title fw-bold mb-2">{{ post.title }}</h1>
 
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
           <!-- Meta -->
-          <p class="text-muted mb-2 mb-md-0">
-            <i class="bi bi-person me-1"></i>
+          <div class="d-flex align-items-center gap-2 text-muted mb-2 mb-md-0">
+            {% if post.author.profile_pic %}
+              <img src="{{ post.author.profile_pic.url }}" alt="{{ post.author.username }}" 
+                   class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+            {% else %}
+              <i class="bi bi-person"></i>
+            {% endif %}
             <strong>{{ post.author.username }}</strong>
-            <span class="mx-2">•</span>
+            <span>•</span>
             <i class="bi bi-tag me-1"></i>{{ post.category }}
-            <span class="mx-2">•</span>
+            <span>•</span>
             <i class="bi bi-calendar me-1"></i>{{ post.created_at|date:"M d, Y" }}
-          </p>
+          </div>
 
           <!-- Actions (Reader only) -->
           <div>
@@ -89,9 +94,20 @@
             {% for comment in comments %}
               <div class="mb-3 pb-3 border-bottom">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <strong>{{ comment.user.username }}</strong>
-                    <small class="text-muted ms-2">{{ comment.created_at|timesince }} ago</small>
+                  <div class="d-flex align-items-center gap-2">
+                    {% if comment.user.profile_pic %}
+                      <img src="{{ comment.user.profile_pic.url }}" alt="{{ comment.user.username }}" 
+                           class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                    {% else %}
+                      <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" 
+                           style="width: 32px; height: 32px;">
+                        <i class="bi bi-person text-white"></i>
+                      </div>
+                    {% endif %}
+                    <div>
+                      <strong>{{ comment.user.username }}</strong>
+                      <small class="text-muted ms-2">{{ comment.created_at|timesince }} ago</small>
+                    </div>
                   </div>
                 </div>
                 <p class="mb-0">{{ comment.content }}</p>
@@ -103,10 +119,21 @@
                       <div class="card bg-light border-0 mb-2 rounded-3">
                         <div class="card-body py-2">
                           <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                              <strong>{{ reply.user.username }}</strong>
-                              <small class="text-muted ms-2">{{ reply.created_at|timesince }} ago</small>
-                              <p class="mb-0 mt-1">{{ reply.content }}</p>
+                            <div class="d-flex align-items-center gap-2">
+                              {% if reply.user.profile_pic %}
+                                <img src="{{ reply.user.profile_pic.url }}" alt="{{ reply.user.username }}" 
+                                     class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
+                              {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" 
+                                     style="width: 28px; height: 28px;">
+                                  <i class="bi bi-person text-white" style="font-size: 0.7rem;"></i>
+                                </div>
+                              {% endif %}
+                              <div>
+                                <strong>{{ reply.user.username }}</strong>
+                                <small class="text-muted ms-2">{{ reply.created_at|timesince }} ago</small>
+                                <p class="mb-0 mt-1">{{ reply.content }}</p>
+                              </div>
                             </div>
                           </div>
                         </div>

@@ -11,7 +11,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
       <div class="d-flex gap-2">
         <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
-          Pending Readers: {{ pending_readers.count|default:0 }}
+          Pending Writers: {{ pending_writers.count|default:0 }}
         </span>
         <span class="badge rounded-pill bg-info text-white px-3 py-2">
           Writer Requests: {{ pending_writer_requests.count|default:0 }}
@@ -22,13 +22,13 @@
       </div>
     </div>
 
-    <!-- Pending Reader Approvals -->
-    {% if pending_readers %}
+    <!-- Pending Writer Approvals -->
+    {% if pending_writers %}
     <div class="card soft-card mb-4 border-0">
       <div class="card-header bg-amber-light border-0 rounded-top-4">
         <h3 class="card-title h5 mb-0 d-flex align-items-center">
           <i class="bi bi-clock-history text-orange me-2"></i>
-          Pending Reader Approvals ({{ pending_readers.count }})
+          Pending Writer Approvals ({{ pending_writers.count }})
         </h3>
       </div>
       <div class="card-body">
@@ -36,6 +36,7 @@
           <table class="table table-hover align-middle">
             <thead class="table-light">
               <tr>
+                <th>Profile</th>
                 <th>Username</th>
                 <th>Name</th>
                 <th>Email</th>
@@ -44,14 +45,23 @@
               </tr>
             </thead>
             <tbody>
-              {% for reader in pending_readers %}
+              {% for writer in pending_writers %}
               <tr>
-                <td class="fw-semibold">{{ reader.username }}</td>
-                <td>{{ reader.get_full_name_with_middle|default:"N/A" }}</td>
-                <td><a href="mailto:{{ reader.email }}" class="hover-link">{{ reader.email }}</a></td>
-                <td class="text-muted">{{ reader.date_joined|date:"M d, Y" }}</td>
+                <td>
+                  {% if writer.profile_pic %}
+                    <img src="{{ writer.profile_pic.url }}" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                  {% else %}
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                      <i class="bi bi-person text-white"></i>
+                    </div>
+                  {% endif %}
+                </td>
+                <td class="fw-semibold">{{ writer.username }}</td>
+                <td>{{ writer.get_full_name_with_middle|default:"N/A" }}</td>
+                <td><a href="mailto:{{ writer.email }}" class="hover-link">{{ writer.email }}</a></td>
+                <td class="text-muted">{{ writer.date_joined|date:"M d, Y" }}</td>
                 <td class="text-end">
-                  <form method="POST" action="{% url 'approve_reader' reader.id %}" class="d-inline">
+                  <form method="POST" action="{% url 'approve_writer' writer.id %}" class="d-inline">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success btn-sm rounded-3">
                       <i class="bi bi-check-circle me-1"></i> Approve

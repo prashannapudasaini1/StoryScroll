@@ -42,9 +42,9 @@ def login_view(request):
             user = authenticate(request, username=username_or_email, password=password)
         
         if user is not None:
-            # Check if Reader is approved
-            if user.role == 'Reader' and not user.is_approved:
-                messages.warning(request, 'Your account is pending admin approval. Please wait for approval.')
+            # Check if Writer is approved
+            if user.role == 'Writer' and not user.is_approved:
+                messages.warning(request, 'Your writer account is pending admin approval. Please wait for approval.')
                 return render(request, 'blog/login.html')
             
             login(request, user)
@@ -62,7 +62,7 @@ def login_view(request):
 
 
 def register_writer(request):
-    """Registration for Writer (auto-approved)"""
+    """Registration for Writer (requires admin approval)"""
     if request.user.is_authenticated:
         return redirect('profile')
     
@@ -78,9 +78,9 @@ def register_writer(request):
             )
             user.set_password(form.cleaned_data['password'])
             user.role = 'Writer'
-            user.is_approved = True  # Writers are auto-approved
+            user.is_approved = False  # Writers need admin approval
             user.save()
-            messages.success(request, f'Writer account created successfully! Your username is: {user.username}. You can now login.')
+            messages.success(request, f'Writer account created! Your username is: {user.username}. Please wait for admin approval before you can login.')
             return redirect('login')
     else:
         form = RegistrationForm()
@@ -93,7 +93,7 @@ def register_writer(request):
 
 
 def register_reader(request):
-    """Registration for Reader (requires admin approval)"""
+    """Registration for Reader (auto-approved)"""
     if request.user.is_authenticated:
         return redirect('profile')
     
@@ -109,9 +109,9 @@ def register_reader(request):
             )
             user.set_password(form.cleaned_data['password'])
             user.role = 'Reader'
-            user.is_approved = False  # Readers need admin approval
+            user.is_approved = True  # Readers are auto-approved
             user.save()
-            messages.success(request, f'Reader account created! Your username is: {user.username}. Please wait for admin approval before you can login.')
+            messages.success(request, f'Reader account created successfully! Your username is: {user.username}. You can now login.')
             return redirect('login')
     else:
         form = RegistrationForm()
@@ -136,10 +136,10 @@ def admin_dashboard(request):
     users = User.objects.exclude(id=request.user.id).order_by('-date_joined')
     posts = Post.objects.all().order_by('-created_at')
     
-    # Pending Reader approvals
-    pending_readers = User.objects.filter(role='Reader', is_approved=False).order_by('date_joined')
+    # Pending Writer approvals (writers need approval now)
+    pending_writers = User.objects.filter(role='Writer', is_approved=False).order_by('date_joined')
     
-    # Pending Writer requests
+    # Pending Writer requests (readers requesting to become writers)
     pending_writer_requests = User.objects.filter(role='Reader', writer_request=True).order_by('date_joined')
     
     # Get all categories
@@ -153,7 +153,7 @@ def admin_dashboard(request):
     context = {
         'users': users,
         'posts': posts,
-        'pending_readers': pending_readers,
+        'pending_writers': pending_writers,
         'pending_writer_requests': pending_writer_requests,
         'categories': categories,
         'deleted_users': deleted_users,
@@ -468,8 +468,29 @@ def author_ranking(request):
 
 @login_required
 def profile(request):
-    """User profile dashboard"""
+    """User profile dashboard with profile picture upload"""
     user = request.user
+    
+    if request.method == 'POST':
+        # Handle profile picture upload
+        if 'profile_pic' in request.FILES:
+            user.profile_pic = request.FILES['profile_pic']
+            user.save()
+            messages.success(request, 'Profile picture updated successfully!')
+            return redirect('profile')
+        
+        # Handle profile information update
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.middle_name = request.POST.get('middle_name', user.middle_name)
+        user.email = request.POST.get('email', user.email)
+        user.phone_number = request.POST.get('phone_number', user.phone_number)
+        user.gender = request.POST.get('gender', user.gender)
+        user.bio = request.POST.get('bio', user.bio)
+        user.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('profile')
+    
     context = {
         'user': user,
     }
@@ -516,13 +537,13 @@ def request_writer(request):
 
 
 @role_required(['Admin'])
-def approve_reader(request, user_id):
-    """Admin approves a Reader registration"""
+def approve_writer(request, user_id):
+    """Admin approves a Writer registration"""
     if request.method == 'POST':
-        user = get_object_or_404(User, id=user_id, role='Reader')
+        user = get_object_or_404(User, id=user_id, role='Writer')
         user.is_approved = True
         user.save()
-        messages.success(request, f'Reader {user.username} has been approved.')
+        messages.success(request, f'Writer {user.username} has been approved.')
     return redirect('admin_dashboard')
 
 
