@@ -1,144 +1,158 @@
+
 {% extends 'blog/base.html' %}
 
 {% block title %}My Profile - StoryScroll{% endblock %}
 
 {% block content %}
-<div class="mt-4">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    {% if user.profile_pic %}
-                        <img src="{{ user.profile_pic.url }}" alt="Profile Picture" class="img-thumbnail rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                    {% else %}
-                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
-                            <i class="bi bi-person-circle text-white" style="font-size: 5rem;"></i>
-                        </div>
-                    {% endif %}
-                    <h4>{{ user.get_full_name_with_middle|default:user.username }}</h4>
-                    <p class="text-muted">@{{ user.username }}</p>
-                    <span class="badge bg-{% if user.role == 'Admin' %}danger{% elif user.role == 'Writer' %}warning{% else %}info{% endif %} mb-3">
-                        {{ user.role }}
-                    </span>
-                    
-                    {% if user.role == 'Reader' and not user.is_approved %}
-                        <div class="alert alert-warning mt-3">
-                            <i class="bi bi-clock-history"></i> Account pending approval
-                        </div>
-                    {% endif %}
-                    
-                    {% if user.role == 'Reader' and user.writer_request %}
-                        <div class="alert alert-info mt-3">
-                            <i class="bi bi-hourglass-split"></i> Writer request pending
-                        </div>
-                    {% endif %}
-                </div>
+<section class="profile-section py-4">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Left Column: Profile Card -->
+      <div class="col-md-4">
+        <div class="card soft-card border-0 text-center p-4">
+          {% if user.profile_pic %}
+            <img src="{{ user.profile_pic.url }}" alt="Profile Picture"
+                 class="img-thumbnail rounded-circle mb-3 profile-pic">
+          {% else %}
+            <div class="avatar-placeholder mb-3">
+              <i class="bi bi-person-circle text-white fs-1"></i>
             </div>
-            
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-gear"></i> Quick Actions</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="{% url 'change_password' %}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-key"></i> Change Password
-                    </a>
-                    {% if user.role == 'Reader' and not user.writer_request %}
-                        <a href="{% url 'request_writer' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-pencil-square"></i> Request to Become Writer
-                        </a>
-                    {% endif %}
-                    {% if user.role == 'Writer' %}
-                        <a href="{% url 'writer_dashboard' %}" class="list-group-item list-group-item-action">
+          {% endif %}
+
+          <h4 class="fw-bold">{{ user.get_full_name_with_middle|default:user.username }}</h4>
+          <p class="text-muted">@{{ user.username }}</p>
+          <span class="badge role-badge bg-{% if user.role == 'Admin' %}danger{% elif user.role == 'Writer' %}warning{% else %}info{% endif %} mb-3">
+            {{ user.role }}
+          </span>
+
+          {% if user.role == 'Reader' and not user.is_approved %}
+            <div class="alert alert-warning mt-3">
+              <i class="bi bi-clock-history me-1"></i> Account pending approval
+            </div>
+          {% endif %}
+
+          {% if user.role == 'Reader' and user.writer_request %}
+            <div class="alert alert-info mt-3">
+              <i class="bi bi-hourglass-split me-1"></i> Writer request pending
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card soft-card mt-3 border-0">
+          <div class="card-header bg-amber-light rounded-top-4">
+            <h5 class="mb-0"><i class="bi bi-gear me-1"></i> Quick Actions</h5>
+          </div>
+          <div class="list-group list-group-flush">
+            <a href="{% url 'change_password' %}" class="list-group-item list-group-item-action">
+              <i class="bi bi-key me-1"></i> Change Password
+            </a>
+            {% if user.role == 'Reader' and not user.writer_request %}
+              <a href="{% url 'request_writer' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-pencil-square me-1"></i> Request Writer Role
+            {% endif %}
+            {% if user.role == 'Writer' %}
+              <a href="{% url 'writer_dashboard' %}" class="list-group-item list-group-item-action">
                             <i class="bi bi-file-text"></i> My Posts
                         </a>
-                    {% endif %}
-                    {% if user.role == 'Reader' %}
-                        <a href="{% url 'reader_dashboard' %}" class="list-group-item list-group-item-action">
+            {% endif %}
+            {% if user.role == 'Reader' %}
+                                      <a href="{% url 'reader_dashboard' %}" class="list-group-item list-group-item-action">
                             <i class="bi bi-book-open"></i> Reader Dashboard
                         </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="bi bi-person-badge"></i> Profile Information</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
-                        <tbody>
-                            <tr>
-                                <th width="30%">Full Name:</th>
-                                <td>{{ user.get_full_name_with_middle|default:"Not provided" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Username:</th>
-                                <td>{{ user.username }}</td>
-                            </tr>
-                            <tr>
-                                <th>Email:</th>
-                                <td>{{ user.email|default:"Not provided" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Phone Number:</th>
-                                <td>{{ user.phone_number|default:"Not provided" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Gender:</th>
-                                <td>{{ user.gender|default:"Not specified" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Role:</th>
-                                <td>
-                                    <span class="badge bg-{% if user.role == 'Admin' %}danger{% elif user.role == 'Writer' %}warning{% else %}info{% endif %}">
-                                        {{ user.role }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Account Status:</th>
-                                <td>
-                                    {% if user.is_approved %}
-                                        <span class="badge bg-success">Approved</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">Pending Approval</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Member Since:</th>
-                                <td>{{ user.date_joined|date:"F d, Y" }}</td>
-                            </tr>
-                            {% if user.bio %}
-                            <tr>
-                                <th>Bio:</th>
-                                <td>{{ user.bio }}</td>
-                            </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            {% if user.role == 'Reader' and user.writer_request %}
-            <div class="card mt-3">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-hourglass-split"></i> Writer Request</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Status:</strong> <span class="badge bg-warning">Pending Admin Review</span></p>
-                    {% if user.writer_request_message %}
-                        <p><strong>Your Message:</strong></p>
-                        <p class="bg-light p-3 rounded">{{ user.writer_request_message }}</p>
-                    {% endif %}
-                </div>
-            </div>
             {% endif %}
+          </div>
         </div>
+      </div>
+
+      <!-- Right Column: Profile Info -->
+      <div class="col-md-8">
+        <div class="card soft-card border-0">
+          <div class="card-header bg-primary text-white rounded-top-4">
+            <h3 class="h5 mb-0"><i class="bi bi-person-badge me-1"></i> Profile Information</h3>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless mb-0">
+              <tbody>
+                <tr><th width="30%">Full Name:</th><td>{{ user.get_full_name_with_middle|default:"Not provided" }}</td></tr>
+                <tr><th>Username:</th><td>{{ user.username }}</td></tr>
+                <tr><th>Email:</th><td>{{ user.email|default:"Not provided" }}</td></tr>
+                <tr><th>Phone Number:</th><td>{{ user.phone_number|default:"Not provided" }}</td></tr>
+                <tr><th>Gender:</th><td>{{ user.gender|default:"Not specified" }}</td></tr>
+                <tr>
+                  <th>Role:</th>
+                  <td><span class="badge bg-{% if user.role == 'Admin' %}danger{% elif user.role == 'Writer' %}warning{% else %}info{% endif %}">{{ user.role }}</span></td>
+                </tr>
+                <tr>
+                  <th>Account Status:</th>
+                  <td>
+                    {% if user.is_approved %}
+                      <span class="badge bg-success">Approved</span>
+                    {% else %}
+                      <span class="badge bg-warning">Pending Approval</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr><th>Member Since:</th><td>{{ user.date_joined|date:"F d, Y" }}</td></tr>
+                {% if user.bio %}
+                  <tr><th>Bio:</th><td>{{ user.bio }}</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {% if user.role == 'Reader' and user.writer_request %}
+          <div class="card soft-card mt-3 border-0">
+            <div class="card-header bg-info text-white rounded-top-4">
+              <h5 class="mb-0"><i class="bi bi-hourglass-split me-1"></i> Writer Request</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Status:</strong> <span class="badge bg-warning">Pending Admin Review</span></p>
+              {% if user.writer_request_message %}
+                <p><strong>Your Message:</strong></p>
+                <p class="bg-light p-3 rounded">{{ user.writer_request_message }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
     </div>
-</div>
+  </div>
+</section>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  .profile-section { background: #f9f5ef; }
+  .soft-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .rounded-top-4 {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+  }
+  .bg-amber-light { background: #fff8f0; }
+  .text-orange { color: #f39c12; }
+  .btn-orange {
+    background-color: #f39c12;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+  }
+  .btn-orange:hover { background-color: #e0890b; }
+  .profile-pic {
+    width: 150px; height: 150px; object-fit: cover;
+  }
+  .avatar-placeholder {
+    width: 150px; height: 150px;
+    background: #6c757d;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .table th { font-weight: 600; color: #2d3436; }
+</style>
+{% endblock %}

@@ -1,199 +1,271 @@
+
 {% extends 'blog/base.html' %}
 
 {% block title %}Admin Dashboard - StoryScroll{% endblock %}
 
 {% block content %}
-<div class="mt-4">
-    <h1 class="mb-4">
-        <i class="bi bi-shield-check"></i> Admin Dashboard
-    </h1>
-    
+<section class="admin-section py-4">
+  <div class="container">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+      <div class="d-flex gap-2">
+        <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+          Pending Readers: {{ pending_readers.count|default:0 }}
+        </span>
+        <span class="badge rounded-pill bg-info text-white px-3 py-2">
+          Writer Requests: {{ pending_writer_requests.count|default:0 }}
+        </span>
+        <span class="badge rounded-pill bg-secondary text-white px-3 py-2">
+          Users: {{ users|length }}
+        </span>
+      </div>
+    </div>
+
     <!-- Pending Reader Approvals -->
     {% if pending_readers %}
-    <div class="card mb-4 border-warning">
-        <div class="card-header bg-warning text-dark">
-            <h3 class="mb-0"><i class="bi bi-clock-history"></i> Pending Reader Approvals ({{ pending_readers.count }})</h3>
+    <div class="card soft-card mb-4 border-0">
+      <div class="card-header bg-amber-light border-0 rounded-top-4">
+        <h3 class="card-title h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-clock-history text-orange me-2"></i>
+          Pending Reader Approvals ({{ pending_readers.count }})
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date Joined</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reader in pending_readers %}
+              <tr>
+                <td class="fw-semibold">{{ reader.username }}</td>
+                <td>{{ reader.get_full_name_with_middle|default:"N/A" }}</td>
+                <td><a href="mailto:{{ reader.email }}" class="hover-link">{{ reader.email }}</a></td>
+                <td class="text-muted">{{ reader.date_joined|date:"M d, Y" }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{% url 'approve_reader' reader.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm rounded-3">
+                      <i class="bi bi-check-circle me-1"></i> Approve
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Date Joined</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for reader in pending_readers %}
-                        <tr>
-                            <td>{{ reader.username }}</td>
-                            <td>{{ reader.get_full_name_with_middle|default:"N/A" }}</td>
-                            <td>{{ reader.email }}</td>
-                            <td>{{ reader.date_joined|date:"M d, Y" }}</td>
-                            <td>
-                                <form method="POST" action="{% url 'approve_reader' reader.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <i class="bi bi-check-circle"></i> Approve
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      </div>
     </div>
     {% endif %}
-    
+
     <!-- Pending Writer Requests -->
     {% if pending_writer_requests %}
-    <div class="card mb-4 border-info">
-        <div class="card-header bg-info text-white">
-            <h3 class="mb-0"><i class="bi bi-hourglass-split"></i> Pending Writer Requests ({{ pending_writer_requests.count }})</h3>
+    <div class="card soft-card mb-4 border-0">
+      <div class="card-header bg-info text-white border-0 rounded-top-4">
+        <h3 class="card-title h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-hourglass-split me-2"></i>
+          Pending Writer Requests ({{ pending_writer_requests.count }})
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Request Message</th>
+                <th>Date</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for request_user in pending_writer_requests %}
+              <tr>
+                <td class="fw-semibold">{{ request_user.username }}</td>
+                <td>{{ request_user.get_full_name_with_middle|default:"N/A" }}</td>
+                <td><a href="mailto:{{ request_user.email }}" class="hover-link">{{ request_user.email }}</a></td>
+                <td class="text-muted">{{ request_user.writer_request_message|truncatewords:12|default:"No message" }}</td>
+                <td class="text-muted">{{ request_user.date_joined|date:"M d, Y" }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{% url 'approve_writer_request' request_user.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm rounded-3">
+                      <i class="bi bi-check-circle me-1"></i> Approve
+                    </button>
+                  </form>
+                  <form method="POST" action="{% url 'reject_writer_request' request_user.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm rounded-3" onclick="return confirm('Reject this writer request?');">
+                      <i class="bi bi-x-circle me-1"></i> Reject
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Request Message</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for request_user in pending_writer_requests %}
-                        <tr>
-                            <td>{{ request_user.username }}</td>
-                            <td>{{ request_user.get_full_name_with_middle|default:"N/A" }}</td>
-                            <td>{{ request_user.email }}</td>
-                            <td>{{ request_user.writer_request_message|truncatewords:10|default:"No message" }}</td>
-                            <td>{{ request_user.date_joined|date:"M d, Y" }}</td>
-                            <td>
-                                <form method="POST" action="{% url 'approve_writer_request' request_user.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <i class="bi bi-check-circle"></i> Approve
-                                    </button>
-                                </form>
-                                <form method="POST" action="{% url 'reject_writer_request' request_user.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Reject this writer request?');">
-                                        <i class="bi bi-x-circle"></i> Reject
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      </div>
     </div>
     {% endif %}
-    
+
     <!-- Users Management -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0"><i class="bi bi-people"></i> User Management</h3>
+    <div class="card soft-card mb-4 border-0">
+      <div class="card-header bg-primary text-white border-0 rounded-top-4">
+        <h3 class="card-title h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-people me-2"></i> User Management
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Date Joined</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td class="fw-semibold">{{ user.username }}</td>
+                <td><a href="mailto:{{ user.email }}" class="hover-link">{{ user.email }}</a></td>
+                <td>
+                  <span class="badge rounded-pill bg-{% if user.role == 'Admin' %}danger{% elif user.role == 'Writer' %}warning{% else %}info{% endif %} px-3 py-2">
+                    {{ user.role }}
+                  </span>
+                </td>
+                <td class="text-muted">{{ user.date_joined|date:"M d, Y" }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{% url 'delete_user' user.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm rounded-3"
+                            onclick="return confirm('Are you sure you want to delete this user?');">
+                      <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">No users found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Date Joined</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>
-                                <span class="badge bg-{% if user.role == 'Admin' %}danger{% elif user.role == 'Writer' %}warning{% else %}info{% endif %}">
-                                    {{ user.role }}
-                                </span>
-                            </td>
-                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
-                            <td>
-                                <form method="POST" action="{% url 'delete_user' user.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" 
-                                            onclick="return confirm('Are you sure you want to delete this user?');">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">No users found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      </div>
     </div>
-    
+
     <!-- Posts Management -->
-    <div class="card">
-        <div class="card-header bg-warning text-dark">
-            <h3 class="mb-0"><i class="bi bi-file-text"></i> Post Management</h3>
+    <div class="card soft-card border-0">
+      <div class="card-header bg-amber-light border-0 rounded-top-4">
+        <h3 class="card-title h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-file-text text-orange me-2"></i> Post Management
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for post in posts %}
+              <tr>
+                <td class="fw-semibold">{{ post.title|truncatewords:10 }}</td>
+                <td>{{ post.author.username }}</td>
+                <td><span class="badge bg-secondary rounded-pill px-3 py-2">{{ post.category }}</span></td>
+                <td class="text-muted">{{ post.created_at|date:"M d, Y" }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{% url 'delete_post_admin' post.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm rounded-3"
+                            onclick="return confirm('Are you sure you want to delete this post?');">
+                      <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">No posts found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Author</th>
-                            <th>Category</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for post in posts %}
-                        <tr>
-                            <td>{{ post.title|truncatewords:10 }}</td>
-                            <td>{{ post.author.username }}</td>
-                            <td><span class="badge bg-secondary">{{ post.category }}</span></td>
-                            <td>{{ post.created_at|date:"M d, Y" }}</td>
-                            <td>
-                                <form method="POST" action="{% url 'delete_post_admin' post.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure you want to delete this post?');">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">No posts found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      </div>
     </div>
-</div>
+
+  </div>
+</section>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Page theme */
+  .admin-section {
+    background: #f9f5ef; /* soft neutral background to match auth pages */
+    border-radius: 1rem;
+  }
 
+  .soft-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .bg-amber-light {
+    background: #fff8f0; /* warm light header */
+    color: #2d3436;
+  }
+
+  .text-orange { color: #f39c12; }
+
+  .hover-link { color: #f39c12; text-decoration: none; }
+  .hover-link:hover { text-decoration: underline; }
+
+  .table thead th {
+    font-weight: 600;
+    color: #2d3436;
+  }
+
+  .table tbody td {
+    vertical-align: middle;
+  }
+
+  .badge { font-weight: 600; }
+
+  /* Buttons polish */
+  .btn-success, .btn-danger {
+    border: none;
+    font-weight: 600;
+  }
+
+  .rounded-top-4 {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+  }
+</style>
+{% endblock %}

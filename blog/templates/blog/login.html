@@ -1,77 +1,60 @@
+
 {% extends 'blog/base.html' %}
 
 {% block title %}Login - StoryScroll{% endblock %}
 
 {% block content %}
-<section class="login-section py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-6 col-lg-5">
-        <div class="login-card card border-0 shadow-sm rounded-4">
-          <div class="card-body p-4 p-md-5">
+<section class="login-section">
+  <div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-5">
+      <div class="login-card card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5">
 
-            <!-- Header -->
-            <div class="text-center mb-4">
-              <div class="icon-circle mb-3">
-                <i class="bi bi-pencil-fill text-orange fs-2"></i>
-              </div>
-              <h1 class="fw-bold mb-2">Welcome Back</h1>
-              <p class="text-muted mb-0">
-                Sign in to continue your journey with StoryScroll.
-              </p>
+          <!-- Header -->
+          <div class="text-center mb-4">
+            <div class="icon-circle mb-3">
+              <i class="bi bi-pencil-fill text-orange fs-2"></i>
             </div>
-
-            <!-- Form -->
-            <form method="POST" novalidate>
-              {% csrf_token %}
-
-              <!-- Email -->
-              <div class="mb-3">
-                <label for="username" class="form-label">
-                  Email <span class="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="username"
-                  name="username"
-                  required
-                  placeholder="john@example.com"
-                >
-              </div>
-
-              <!-- Password -->
-              <div class="mb-4">
-                <label for="password" class="form-label">
-                  Password <span class="text-danger">*</span>
-                </label>
-                <input
-                  type="password"
-                  class="form-control"
-                  id="password"
-                  name="password"
-                  required
-                  placeholder="********"
-                >
-              </div>
-
-              <!-- Submit -->
-              <button type="submit" class="btn btn-orange w-100 py-2 rounded-3">
-                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-              </button>
-            </form>
-
-            <!-- Footer -->
-            <div class="text-center mt-4">
-              <small class="text-muted">
-                Don't have an account?
-                <a href="{% url 'register_writer' %}" class="text-orange fw-semibold">
-                  Create one here
-                </a>
-              </small>
-            </div>
-
+            <h1 class="fw-bold mb-2">Welcome Back</h1>
+            <p class="text-muted mb-0">Sign in to continue your journey with StoryScroll.</p>
           </div>
+
+          <!-- Form -->
+          <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="username" class="form-label fs-6">
+                Email <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="username" name="username" required placeholder="john@example.com">
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label fs-6">
+                Password <span class="text-danger">*</span>
+              </label>
+              <input type="password" class="form-control" id="password" name="password" required placeholder="********">
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-orange w-100 py-2 rounded-3">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+            </button>
+          </form>
+
+          <!-- Footer -->
+          <div class="text-center mt-4">
+            <small class="text-muted">
+              Don't have an account?
+              <a href="{% url 'register_writer' %}" class="text-orange fw-semibold hover-link">
+                Create one here
+              </a>
+            </small>
+          </div>
+
         </div>
       </div>
     </div>
@@ -83,9 +66,6 @@
 <style>
   .login-section {
     background: #f9f5ef;
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
   }
 
   .login-card {
@@ -113,6 +93,7 @@
     color: #fff;
     border: none;
     font-weight: 600;
+    transition: background-color 0.3s ease;
   }
 
   .btn-orange:hover {
@@ -124,6 +105,10 @@
     border-radius: 0.5rem;
     padding: 0.625rem 0.75rem;
     border: 1px solid #e1e1e1;
+  }
+
+  .hover-link:hover {
+    text-decoration: underline;
   }
 </style>
 {% endblock %}

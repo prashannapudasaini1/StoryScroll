@@ -1,122 +1,242 @@
+
 {% extends 'blog/base.html' %}
 
 {% block title %}Author Ranking - StoryScroll{% endblock %}
 
 {% block content %}
-<div class="mt-4">
-    <h1 class="mb-4">
-        <i class="bi bi-trophy"></i> Author Leaderboard
-    </h1>
-    
-    <div class="card">
-        <div class="card-header bg-warning text-dark">
-            <h3 class="mb-0"><i class="bi bi-star"></i> Top Authors by Followers</h3>
-        </div>
-        <div class="card-body">
-            {% if authors %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">Rank</th>
-                            <th>Author</th>
-                            <th>Email</th>
-                            <th>Posts</th>
-                            <th>Followers</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for author in authors %}
-                        <tr>
-                            <td>
-                                {% if forloop.counter == 1 %}
-                                    <span class="badge bg-warning text-dark" style="font-size: 1.2rem;">
-                                        <i class="bi bi-trophy-fill"></i> #{{ forloop.counter }}
-                                    </span>
-                                {% elif forloop.counter == 2 %}
-                                    <span class="badge bg-secondary" style="font-size: 1.1rem;">
-                                        <i class="bi bi-award-fill"></i> #{{ forloop.counter }}
-                                    </span>
-                                {% elif forloop.counter == 3 %}
-                                    <span class="badge bg-danger" style="font-size: 1rem;">
-                                        <i class="bi bi-award"></i> #{{ forloop.counter }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-info">#{{ forloop.counter }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <strong>{{ author.username }}</strong>
-                                {% if author.bio %}
-                                <br><small class="text-muted">{{ author.bio|truncatewords:10 }}</small>
-                                {% endif %}
-                            </td>
-                            <td>{{ author.email }}</td>
-                            <td>
-                                <span class="badge bg-primary">{{ author.posts.count }}</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success">
-                                    <i class="bi bi-people"></i> {{ author.follower_count }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if user.role == 'Reader' %}
-                                <button class="btn btn-sm btn-outline-primary follow-author-btn" 
-                                        data-author-id="{{ author.id }}">
-                                    <i class="bi bi-person-plus"></i> Follow
-                                </button>
-                                {% endif %}
-                                <a href="{% url 'reader_dashboard' %}?author={{ author.id }}" 
-                                   class="btn btn-sm btn-info">
-                                    <i class="bi bi-eye"></i> View Posts
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info text-center">
-                <i class="bi bi-info-circle" style="font-size: 3rem;"></i>
-                <p class="mt-3">No authors found.</p>
-            </div>
-            {% endif %}
-        </div>
+<section class="ranking-section py-4">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+      <h1 class="h3 fw-bold text-dark mb-2 mb-md-0">
+        <i class="bi bi-trophy text-orange me-2"></i> Author Leaderboard
+      </h1>
+      {% if authors %}
+      <div class="d-flex gap-2">
+        <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+          Top by Followers
+        </span>
+        <span class="badge rounded-pill bg-secondary text-white px-3 py-2">
+          Total Authors: {{ authors|length }}
+        </span>
+      </div>
+      {% endif %}
     </div>
-</div>
+
+    <!-- Leaderboard Card -->
+    <div class="card soft-card border-0">
+      <div class="card-header bg-amber-light border-0 rounded-top-4">
+        <h3 class="h5 mb-0 d-flex align-items-center">
+          <i class="bi bi-star text-orange me-2"></i> Top Authors by Followers
+        </h3>
+      </div>
+
+      <div class="card-body">
+        {% if authors %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th style="width:80px;">Rank</th>
+                <th>Author</th>
+                <th>Email</th>
+                <th>Posts</th>
+                <th>Followers</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for author in authors %}
+              <tr>
+                <!-- Rank badge -->
+                <td>
+                  {% if forloop.counter == 1 %}
+                    <span class="badge rank-badge gold">
+                      <i class="bi bi-trophy-fill me-1"></i>#{{ forloop.counter }}
+                    </span>
+                  {% elif forloop.counter == 2 %}
+                    <span class="badge rank-badge silver">
+                      <i class="bi bi-award-fill me-1"></i>#{{ forloop.counter }}
+                    </span>
+                  {% elif forloop.counter == 3 %}
+                    <span class="badge rank-badge bronze">
+                      <i class="bi bi-award me-1"></i>#{{ forloop.counter }}
+                    </span>
+                  {% else %}
+                    <span class="badge rank-badge other">#{{ forloop.counter }}</span>
+                  {% endif %}
+                </td>
+
+                <!-- Author info -->
+                <td>
+                  <div class="d-flex align-items-start gap-3">
+                    {% if author.profile_image %}
+                      <img src="{{ author.profile_image.url }}" alt="{{ author.username }}"
+                           class="rounded-circle avatar-sm">
+                    {% else %}
+                      <div class="avatar-sm placeholder">
+                        <i class="bi bi-person text-muted"></i>
+                      </div>
+                    {% endif %}
+                    <div>
+                      <strong class="d-block">{{ author.username }}</strong>
+                      {% if author.bio %}
+                        <small class="text-muted d-block">{{ author.bio|truncatewords:12 }}</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td>
+                  <a href="mailto:{{ author.email }}" class="hover-link">{{ author.email }}</a>
+                </td>
+
+                <!-- Posts count -->
+                <td>
+                  <span class="badge bg-primary rounded-pill px-3 py-2">
+                    {{ author.posts.count }}
+                  </span>
+                </td>
+
+                <!-- Followers -->
+                <td>
+                  <span class="badge bg-success rounded-pill px-3 py-2">
+                    <i class="bi bi-people me-1"></i>{{ author.follower_count }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-end">
+                  {% if user.role == 'Reader' %}
+                    <button
+                      class="btn btn-sm btn-outline-primary rounded-3 follow-author-btn"
+                      data-author-id="{{ author.id }}">
+                      <i class="bi bi-person-plus me-1"></i> Follow
+                    </button>
+                  {% endif %}
+                  <a href="{% url 'reader_dashboard' %}?author={{ author.id }}"
+                     class="btn btn-sm btn-info rounded-3 ms-1">
+                    <i class="bi bi-eye me-1"></i> View Posts
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <div class="alert alert-info text-center py-5">
+            <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+            <p class="mt-3 mb-0">No authors found.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ranking-section { background: #f9f5ef; }
+
+  .soft-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .bg-amber-light {
+    background: #fff8f0;
+    color: #2d3436;
+  }
+
+  .text-orange { color: #f39c12; }
+  .hover-link { color: #f39c12; text-decoration: none; }
+  .hover-link:hover { text-decoration: underline; }
+
+  .rounded-top-4 {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+  }
+
+  /* Rank badges */
+  .rank-badge {
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.35rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  .rank-badge.gold   { background: #ffe08a; color: #6b4e00; }
+  .rank-badge.silver { background: #dfe6e9; color: #2d3436; }
+  .rank-badge.bronze { background: #f8d7da; color: #7b2e2e; }
+  .rank-badge.other  { background: #e3f2fd; color: #0d47a1; }
+
+  /* Avatar */
+  .avatar-sm {
+    width: 40px; height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1px solid #eee;
+  }
+  .avatar-sm.placeholder {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: #f1f3f5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Table polish */
+  .table thead th { font-weight: 600; color: #2d3436; }
+  .table tbody td { vertical-align: middle; }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Follow/Unfollow functionality for ranking page
-    document.querySelectorAll('.follow-author-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const authorId = this.getAttribute('data-author-id');
-            fetch(`/author/${authorId}/follow/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.following) {
-                    this.innerHTML = '<i class="bi bi-person-check"></i> Following';
-                    this.classList.remove('btn-outline-primary');
-                    this.classList.add('btn-primary');
-                } else {
-                    this.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
-                    this.classList.remove('btn-primary');
-                    this.classList.add('btn-outline-primary');
-                }
-            });
-        });
+  // --- CSRF helper from cookie (safer than injecting token in JS directly) ---
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // Follow/Unfollow functionality for ranking page
+  document.querySelectorAll('.follow-author-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const authorId = this.getAttribute('data-author-id');
+
+      fetch(`/author/${authorId}/follow/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.following) {
+          this.innerHTML = '<i class="bi bi-person-check me-1"></i> Following';
+          this.classList.remove('btn-outline-primary');
+          this.classList.add('btn-primary');
+        } else {
+          this.innerHTML = '<i class="bi bi-person-plus me-1"></i> Follow';
+          this.classList.remove('btn-primary');
+          this.classList.add('btn-outline-primary');
+        }
+      })
+      .catch(() => {
+        // Optional: show a toast/alert on error
+        alert('Something went wrong. Please try again.');
+      });
     });
+  });
 </script>
 {% endblock %}
-
-

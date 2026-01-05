@@ -1,62 +1,119 @@
+
 {% extends 'blog/base.html' %}
 
 {% block title %}Edit Post - StoryScroll{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
+<section class="edit-post-section py-4">
+  <div class="container d-flex justify-content-center">
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                <h3 class="mb-0"><i class="bi bi-pencil"></i> Edit Post</h3>
-            </div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" value="{{ post.title }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="category" class="form-label">Category</label>
-                        <select class="form-select" id="category" name="category" required>
-                            <option value="Technology" {% if post.category == 'Technology' %}selected{% endif %}>Technology</option>
-                            <option value="Lifestyle" {% if post.category == 'Lifestyle' %}selected{% endif %}>Lifestyle</option>
-                            <option value="Travel" {% if post.category == 'Travel' %}selected{% endif %}>Travel</option>
-                            <option value="Food" {% if post.category == 'Food' %}selected{% endif %}>Food</option>
-                            <option value="Fashion" {% if post.category == 'Fashion' %}selected{% endif %}>Fashion</option>
-                            <option value="Health" {% if post.category == 'Health' %}selected{% endif %}>Health</option>
-                            <option value="Education" {% if post.category == 'Education' %}selected{% endif %}>Education</option>
-                            <option value="Business" {% if post.category == 'Business' %}selected{% endif %}>Business</option>
-                            <option value="Entertainment" {% if post.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
-                            <option value="Other" {% if post.category == 'Other' %}selected{% endif %}>Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="content" class="form-label">Content</label>
-                        <textarea class="form-control" id="content" name="content" rows="15" required>{{ post.content }}</textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="featured_image" class="form-label">Featured Image (Optional)</label>
-                        {% if post.featured_image %}
-                            <div class="mb-2">
-                                <img src="{{ post.featured_image.url }}" alt="Current image" class="img-thumbnail" style="max-height: 200px;">
-                            </div>
-                        {% endif %}
-                        <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*">
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'writer_dashboard' %}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Update Post</button>
-                    </div>
-                </form>
-            </div>
+      <div class="card soft-card border-0">
+        <div class="card-header bg-warning text-dark border-0 rounded-top-4">
+          <h3 class="h5 mb-0 d-flex align-items-center">
+            <i class="bi bi-pencil me-2"></i> Edit Post
+          </h3>
         </div>
+        <div class="card-body p-4">
+          <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <!-- Title -->
+            <div class="mb-3">
+              <label for="title" class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control rounded-3" id="title" name="title" value="{{ post.title }}" required>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-3">
+              <label for="category" class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+              <select class="form-select rounded-3" id="category" name="category" required>
+                <option value="Technology" {% if post.category == 'Technology' %}selected{% endif %}>Technology</option>
+                <option value="Lifestyle" {% if post.category == 'Lifestyle' %}selected{% endif %}>Lifestyle</option>
+                <option value="Travel" {% if post.category == 'Travel' %}selected{% endif %}>Travel</option>
+                <option value="Food" {% if post.category == 'Food' %}selected{% endif %}>Food</option>
+                <option value="Fashion" {% if post.category == 'Fashion' %}selected{% endif %}>Fashion</option>
+                <option value="Health" {% if post.category == 'Health' %}selected{% endif %}>Health</option>
+                <option value="Education" {% if post.category == 'Education' %}selected{% endif %}>Education</option>
+                <option value="Business" {% if post.category == 'Business' %}selected{% endif %}>Business</option>
+                <option value="Entertainment" {% if post.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                <option value="Other" {% if post.category == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+
+            <!-- Content -->
+            <div class="mb-3">
+              <label for="content" class="form-label fw-semibold">Content <span class="text-danger">*</span></label>
+              <textarea class="form-control rounded-3" id="content" name="content" rows="12" required>{{ post.content }}</textarea>
+            </div>
+
+            <!-- Featured Image -->
+            <div class="mb-3">
+              <label for="featured_image" class="form-label fw-semibold">Featured Image (Optional)</label>
+              {% if post.featured_image %}
+                <div class="mb-2">
+                  <img src="{{ post.featured_image.url }}" alt="Current image" class="img-thumbnail rounded-3" style="max-height: 200px;">
+                </div>
+              {% endif %}
+              <input type="file" class="form-control rounded-3" id="featured_image" name="featured_image" accept="image/*">
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'writer_dashboard' %}" class="btn btn-secondary">Cancel</a>   
+                 <button type="submit" class="btn btn-orange px-4 py-2 rounded-3">
+                <i class="bi bi-pencil me-1"></i> Update Post
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
+</section>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  .edit-post-section {
+    background: #f9f5ef;
+    min-height: 80vh;
+  }
 
+  .soft-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .rounded-top-4 {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+  }
+
+  .btn-orange {
+    background-color: #f39c12;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+
+  .btn-orange:hover {
+    background-color: #e0890b;
+    color: #fff;
+  }
+
+  input.form-control,
+  select.form-select,
+  textarea.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #e1e1e1;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .form-label {
+    font-size: 0.95rem;
+    color: #2d3436;
+  }
+</style>
+{% endblock %}

@@ -17,10 +17,11 @@ def login_view(request):
         # Redirect based on role
         if request.user.role == 'Admin':
             return redirect('admin_dashboard')
-        elif request.user.role == 'Writer':
-            return redirect('writer_dashboard')
-        else:
+        elif request.user.role == 'Reader':
             return redirect('reader_dashboard')
+        else:
+            return redirect('writer_dashboard')
+
     
     if request.method == 'POST':
         username_or_email = request.POST.get('username')
