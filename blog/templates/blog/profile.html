@@ -68,13 +68,16 @@
             {% endif %}
             {% if user.role == 'Writer' %}
               <a href="{% url 'writer_dashboard' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-file-text"></i> My Posts
-                        </a>
+                <i class="bi bi-file-text"></i> My Posts
+              </a>
+              <a href="{% url 'reader_dashboard' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-book-open"></i> Read Blogs
+              </a>
             {% endif %}
             {% if user.role == 'Reader' %}
-                                      <a href="{% url 'reader_dashboard' %}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-book-open"></i> Reader Dashboard
-                        </a>
+              <a href="{% url 'reader_dashboard' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-book-open"></i> Reader Dashboard
+              </a>
             {% endif %}
           </div>
         </div>

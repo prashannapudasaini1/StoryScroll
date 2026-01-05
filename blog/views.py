@@ -313,9 +313,9 @@ def reply_comment(request, comment_id):
     return redirect('writer_dashboard')
 
 
-@role_required(['Reader'])
+@role_required(['Reader', 'Writer'])
 def reader_dashboard(request):
-    """Reader dashboard with navigation and filters"""
+    """Reader dashboard with navigation and filters (Writers can also read blogs)"""
     posts = Post.objects.all().order_by('-created_at')
     category = request.GET.get('category')
     author_id = request.GET.get('author')
@@ -367,14 +367,15 @@ def reader_dashboard(request):
 
 @role_required(['Reader', 'Writer', 'Admin'])
 def post_detail(request, post_id):
-    """View a single post with comments (all roles can view, but only Readers can like/comment)"""
+    """View a single post with comments (Readers and Writers can like/comment/follow)"""
     post = get_object_or_404(Post, id=post_id)
     comments = Comment.objects.filter(post=post, parent=None).order_by('created_at')
     is_liked = False
     is_following = False
-    if request.user.role == 'Reader':
+    # Allow both Readers and Writers to interact
+    if request.user.role in ['Reader', 'Writer']:
         is_liked = post.is_liked_by(request.user)
-        if post.author.role == 'Writer':
+        if post.author.role == 'Writer' and post.author != request.user:
             is_following = Follow.objects.filter(follower=request.user, followed_author=post.author).exists()
     
     context = {
@@ -386,10 +387,10 @@ def post_detail(request, post_id):
     return render(request, 'blog/post_detail.html', context)
 
 
-@role_required(['Reader'])
+@role_required(['Reader', 'Writer'])
 @require_POST
 def toggle_like(request, post_id):
-    """Toggle like on a post (Reader only)"""
+    """Toggle like on a post (Reader and Writer)"""
     post = get_object_or_404(Post, id=post_id)
     like, created = Like.objects.get_or_create(post=post, user=request.user)
     
@@ -406,10 +407,10 @@ def toggle_like(request, post_id):
     })
 
 
-@role_required(['Reader'])
+@role_required(['Reader', 'Writer'])
 @require_POST
 def add_comment(request, post_id):
-    """Add a comment to a post (Reader only)"""
+    """Add a comment to a post (Reader and Writer)"""
     post = get_object_or_404(Post, id=post_id)
     content = request.POST.get('content')
     
@@ -426,10 +427,10 @@ def add_comment(request, post_id):
     return redirect('post_detail', post_id=post_id)
 
 
-@role_required(['Reader'])
+@role_required(['Reader', 'Writer'])
 @require_POST
 def toggle_follow(request, author_id):
-    """Toggle follow/unfollow an author (Reader only)"""
+    """Toggle follow/unfollow an author (Reader and Writer)"""
     author = get_object_or_404(User, id=author_id, role='Writer')
     
     if author == request.user:

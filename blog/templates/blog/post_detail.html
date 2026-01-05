@@ -38,9 +38,9 @@
             <i class="bi bi-calendar me-1"></i>{{ post.created_at|date:"M d, Y" }}
           </div>
 
-          <!-- Actions (Reader only) -->
+          <!-- Actions (Reader and Writer) -->
           <div>
-            {% if user.role == 'Reader' %}
+            {% if user.role == 'Reader' or user.role == 'Writer' %}
               <button
                 class="btn btn-outline-danger like-btn {% if is_liked %}liked{% endif %}"
                 data-post-id="{{ post.id }}" id="likeBtn">
@@ -48,7 +48,7 @@
                 <span id="likeCount">{{ post.get_like_count }}</span>
               </button>
 
-              {% if post.author.role == 'Writer' %}
+              {% if post.author.role == 'Writer' and post.author != user %}
                 <button
                   class="btn {% if is_following %}btn-primary{% else %}btn-outline-primary{% endif %} ms-2 follow-btn"
                   data-author-id="{{ post.author.id }}" id="followBtn">
@@ -69,8 +69,8 @@
       </div>
     </div>
 
-    <!-- Comments (Reader only) -->
-    {% if user.role == 'Reader' %}
+    <!-- Comments (Reader and Writer) -->
+    {% if user.role == 'Reader' or user.role == 'Writer' %}
       <div class="card soft-card mb-4 border-0">
         <div class="card-header bg-amber-light border-0 rounded-top-4">
           <h4 class="h5 mb-0 d-flex align-items-center">
