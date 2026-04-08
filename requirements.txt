@@ -1,6 +1,6 @@
-Django==4.2.7
-psycopg2-binary==2.9.9
-Werkzeug==3.0.1
-Pillow==10.1.0
+Django
+psycopg2-binary
+Werkzeug
+Pillow
 
 

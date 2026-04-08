@@ -47,6 +47,8 @@ StoryScroll is a comprehensive blog platform built with Django that supports mul
 2. **Create a virtual environment**
    ```bash
    python -m venv venv
+   for linux
+   python3 -m venv venv
    ```
 
 3. **Activate the virtual environment**
