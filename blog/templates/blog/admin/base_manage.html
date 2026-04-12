@@ -1,0 +1,25 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Admin - StoryScroll{% endblock %}
+
+{% block content %}
+<section class="admin-section py-4">
+  <div class="container">
+    <nav class="mb-3 d-flex flex-wrap align-items-center gap-2">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-3">
+        <i class="bi bi-arrow-left me-1"></i> Admin dashboard
+      </a>
+    </nav>
+    <h1 class="h3 fw-bold text-dark mb-1">{% block admin_page_heading %}Admin{% endblock %}</h1>
+    {% block admin_page_subtitle %}{% endblock %}
+    <div class="mb-4"></div>
+    {% block admin_inner %}{% endblock %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+{% include 'blog/includes/admin_shared_styles.html' %}
+</style>
+{% endblock %}

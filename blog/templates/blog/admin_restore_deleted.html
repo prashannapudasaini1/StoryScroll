@@ -1,0 +1,134 @@
+{% extends 'blog/admin/base_manage.html' %}
+
+{% block title %}Restore deleted items - StoryScroll{% endblock %}
+{% block admin_page_heading %}Deleted items{% endblock %}
+{% block admin_page_subtitle %}<p class="text-muted small mb-0">Restore soft-deleted users, posts, or categories.</p>{% endblock %}
+
+{% block admin_inner %}
+{% if deleted_users or deleted_posts or deleted_categories %}
+<div class="card border-0 shadow-sm p-3 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); border-left: 4px solid #dc3545 !important;">
+  <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2">
+    <h2 class="card-title h5 mb-0 fw-bold d-flex align-items-center">
+      <i class="bi bi-trash3-fill text-secondary me-2"></i> Restore
+    </h2>
+  </div>
+  <div class="card-body">
+    {% if deleted_users %}
+    <div class="mb-4">
+      <h3 class="h6 mb-3">Deleted users</h3>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Deleted at</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in deleted_users %}
+            <tr>
+              <td class="fw-semibold">{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td><span class="badge bg-secondary">{{ user.role }}</span></td>
+              <td class="text-muted">{{ user.deleted_at|date:"M d, Y H:i" }}</td>
+              <td class="text-end">
+                <form method="POST" action="{% url 'restore_user' user.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm rounded-3">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if deleted_posts %}
+    <div class="mb-4">
+      <h3 class="h6 mb-3">Deleted posts</h3>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Category</th>
+              <th>Deleted at</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post in deleted_posts %}
+            <tr>
+              <td class="fw-semibold">{{ post.title|truncatewords:10 }}</td>
+              <td>{{ post.author.username }}</td>
+              <td><span class="badge bg-secondary">{{ post.category }}</span></td>
+              <td class="text-muted">{{ post.deleted_at|date:"M d, Y H:i" }}</td>
+              <td class="text-end">
+                <form method="POST" action="{% url 'restore_post' post.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm rounded-3">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if deleted_categories %}
+    <div>
+      <h3 class="h6 mb-3">Deleted categories</h3>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Deleted at</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in deleted_categories %}
+            <tr>
+              <td class="fw-semibold">{{ category.name }}</td>
+              <td class="text-muted">{{ category.description|default:"—" }}</td>
+              <td class="text-muted">{{ category.deleted_at|date:"M d, Y H:i" }}</td>
+              <td class="text-end">
+                <form method="POST" action="{% url 'restore_category' category.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm rounded-3">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="card soft-card border-0">
+  <div class="card-body text-center text-muted py-5">
+    <i class="bi bi-check-circle text-success display-4 d-block mb-3"></i>
+    <p class="mb-0">Nothing in the trash. Deleted users, posts, and categories will show up here.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

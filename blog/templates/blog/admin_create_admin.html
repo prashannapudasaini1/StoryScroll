@@ -1,0 +1,47 @@
+{% extends 'blog/admin/base_manage.html' %}
+
+{% block title %}Create admin - StoryScroll{% endblock %}
+{% block admin_page_heading %}Create new admin account{% endblock %}
+{% block admin_page_subtitle %}<p class="text-muted small mb-0">Adds another superuser-style admin. Share credentials securely.</p>{% endblock %}
+
+{% block admin_inner %}
+<div class="card border-0 shadow-sm p-3 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(12px);">
+  <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2">
+    <h2 class="card-title h5 mb-0 fw-bold d-flex align-items-center">
+      <i class="bi bi-person-plus-fill text-danger me-2"></i> New admin
+    </h2>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{% url 'create_admin' %}">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="admin_first_name" class="form-label">First name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="admin_first_name" name="first_name" required>
+        </div>
+        <div class="col-md-6">
+          <label for="admin_last_name" class="form-label">Last name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="admin_last_name" name="last_name" required>
+        </div>
+        <div class="col-md-6">
+          <label for="admin_email" class="form-label">Email <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" id="admin_email" name="email" required>
+        </div>
+        <div class="col-md-3">
+          <label for="admin_password" class="form-label">Password <span class="text-danger">*</span></label>
+          <input type="password" class="form-control" id="admin_password" name="password" required minlength="8">
+        </div>
+        <div class="col-md-3">
+          <label for="admin_password_confirm" class="form-label">Confirm password <span class="text-danger">*</span></label>
+          <input type="password" class="form-control" id="admin_password_confirm" name="password_confirm" required minlength="8">
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-danger rounded-3">
+            <i class="bi bi-person-plus me-1"></i> Create admin account
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

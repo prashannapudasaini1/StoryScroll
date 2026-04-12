@@ -10,7 +10,11 @@ from django.core.cache import cache
 from .models import User, Post, Comment, Like, Follow, Category, RestoreRequest
 from .decorators import role_required
 from .forms import RegistrationForm, CustomPasswordChangeForm, WriterRequestForm
-from .utils import generate_unique_username, get_recommended_posts
+from .utils import (
+    generate_unique_username,
+    materialize_recommendations_from_cache,
+    recommendation_payload_for_cache,
+)
 
 
 def login_view(request):
@@ -147,7 +151,7 @@ def delete_user(request, user_id):
             user.deleted_at = timezone.now()
             user.save()
             messages.success(request, f'User {user.username} has been deleted.')
-    return redirect('admin_dashboard')
+    return redirect('admin_manage_users')
 
 
 @role_required(['Admin'])
@@ -162,7 +166,7 @@ def delete_post_admin(request, post_id):
             post.deleted_at = timezone.now()
             post.save()
             messages.success(request, 'Post has been deleted.')
-    return redirect('admin_dashboard')
+    return redirect('admin_manage_posts')
 
 
 @role_required(['Writer'])
@@ -196,8 +200,7 @@ def create_post(request):
     # Get available categories
     categories = Category.objects.all().order_by('name')
     if not categories.exists():
-        # Fallback to default categories if none exist
-        categories = [cat[0] for cat in Post.CATEGORY_CHOICES]
+        categories = ['Technology', 'Lifestyle', 'Travel', 'Food', 'Other']
     
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -226,8 +229,7 @@ def edit_post(request, post_id):
     # Get available categories
     categories = Category.objects.all().order_by('name')
     if not categories.exists():
-        # Fallback to default categories if none exist
-        categories = [cat[0] for cat in Post.CATEGORY_CHOICES]
+        categories = ['Technology', 'Lifestyle', 'Travel', 'Food', 'Other']
     
     if request.method == 'POST':
         post.title = request.POST.get('title')
@@ -362,21 +364,20 @@ def post_detail(request, post_id):
         if post.author.role == 'Writer' and post.author != request.user:
             is_following = Follow.objects.filter(follower=request.user, followed_author=post.author).exists()
     
-    # Get recommended posts with caching (24 hours)
-    cache_key = f'recommended_posts_{post_id}'
-    recommended_posts = cache.get(cache_key)
-    
-    if recommended_posts is None:
-        recommended_posts = get_recommended_posts(post, num_recommendations=5)
-        # Cache for 24 hours (86400 seconds)
-        cache.set(cache_key, recommended_posts, 86400)
-    
+    # Recommendations with per-item explanations (cache pickle-safe payload)
+    cache_key = f'recommended_posts_detail_{post_id}'
+    cached_payload = cache.get(cache_key)
+    if cached_payload is None:
+        cached_payload = recommendation_payload_for_cache(post, num_recommendations=5)
+        cache.set(cache_key, cached_payload, 86400)
+    recommendation_items = materialize_recommendations_from_cache(cached_payload)
+
     context = {
         'post': post,
         'comments': comments,
         'is_liked': is_liked,
         'is_following': is_following,
-        'recommended_posts': recommended_posts,
+        'recommendation_items': recommendation_items,
     }
     return render(request, 'blog/post_detail.html', context)
 
@@ -404,14 +405,23 @@ def toggle_like(request, post_id):
 @role_required(['Reader', 'Writer'])
 @require_POST
 def add_comment(request, post_id):
-    """Add a comment to a post (Reader and Writer)"""
+    """Add a comment or reply to a post (Reader and Writer)"""
     post = get_object_or_404(Post, id=post_id)
     content = request.POST.get('content')
+    parent_id = request.POST.get('parent_id')
     
     if content:
+        parent_comment = None
+        if parent_id:
+            try:
+                parent_comment = Comment.objects.get(id=parent_id, post=post)
+            except Comment.DoesNotExist:
+                pass
+
         Comment.objects.create(
             post=post,
             user=request.user,
+            parent=parent_comment,
             content=content
         )
         messages.success(request, 'Comment added successfully!')
@@ -580,15 +590,15 @@ def create_admin(request):
         
         if not all([first_name, last_name, email, password, password_confirm]):
             messages.error(request, 'All fields are required.')
-            return redirect('admin_dashboard')
+            return redirect('admin_create_admin_page')
         
         if password != password_confirm:
             messages.error(request, 'Passwords do not match.')
-            return redirect('admin_dashboard')
+            return redirect('admin_create_admin_page')
         
         if User.objects.filter(email=email).exists():
             messages.error(request, 'A user with this email already exists.')
-            return redirect('admin_dashboard')
+            return redirect('admin_create_admin_page')
         
         # Generate unique username
         username = generate_unique_username(first_name, last_name)
@@ -605,9 +615,9 @@ def create_admin(request):
             is_superuser=True
         )
         messages.success(request, f'Admin account created successfully! Username: {user.username}')
-        return redirect('admin_dashboard')
+        return redirect('admin_create_admin_page')
     
-    return redirect('admin_dashboard')
+    return redirect('admin_create_admin_page')
 
 
 @role_required(['Admin'])
@@ -619,20 +629,20 @@ def add_category(request):
         
         if not name:
             messages.error(request, 'Category name is required.')
-            return redirect('admin_dashboard')
+            return redirect('admin_manage_categories')
         
         if Category.objects.filter(name__iexact=name).exists():
             messages.error(request, 'A category with this name already exists.')
-            return redirect('admin_dashboard')
+            return redirect('admin_manage_categories')
         
         category = Category.objects.create(
             name=name,
             description=description if description else None
         )
         messages.success(request, f'Category "{category.name}" added successfully!')
-        return redirect('admin_dashboard')
+        return redirect('admin_manage_categories')
     
-    return redirect('admin_dashboard')
+    return redirect('admin_manage_categories')
 
 
 @role_required(['Admin'])
@@ -648,7 +658,7 @@ def delete_category(request, category_id):
             category.deleted_at = timezone.now()
             category.save()
             messages.success(request, f'Category "{category_name}" deleted successfully!')
-    return redirect('admin_dashboard')
+    return redirect('admin_manage_categories')
 
 
 @role_required(['Admin'])
@@ -660,7 +670,7 @@ def restore_user(request, user_id):
         user.deleted_at = None
         user.save()
         messages.success(request, f'User {user.username} has been restored.')
-    return redirect('admin_dashboard')
+    return redirect('admin_restore_deleted')
 
 
 @role_required(['Admin'])
@@ -672,7 +682,7 @@ def restore_post(request, post_id):
         post.deleted_at = None
         post.save()
         messages.success(request, f'Post "{post.title}" has been restored.')
-    return redirect('admin_dashboard')
+    return redirect('admin_restore_deleted')
 
 
 @role_required(['Admin'])
@@ -684,7 +694,7 @@ def restore_category(request, category_id):
         category.deleted_at = None
         category.save()
         messages.success(request, f'Category "{category.name}" has been restored.')
-    return redirect('admin_dashboard')
+    return redirect('admin_restore_deleted')
 
 
 @role_required(['Writer'])
@@ -753,46 +763,79 @@ def reject_restore_request(request, request_id):
     return redirect('admin_dashboard')
 
 
-@role_required(['Admin'])
-def admin_dashboard(request):
-    """Admin dashboard with user and post management"""
-    users = User.objects.exclude(id=request.user.id).order_by('-date_joined')
-    posts = Post.objects.all().order_by('-created_at')
-    
-    # Pending Writer approvals (writers need approval now)
-    pending_writers = User.objects.filter(role='Writer', is_approved=False).order_by('date_joined')
-    
-    # Pending Writer requests (readers requesting to become writers)
-    pending_writer_requests = User.objects.filter(role='Reader', writer_request=True).order_by('date_joined')
-    
-    # Pending restore requests (with error handling for missing table)
+def _pending_restore_requests_queryset(request):
+    """RestoreRequest queryset or empty; may flash a migration warning."""
     try:
-        pending_restore_requests = RestoreRequest.objects.filter(status='Pending').order_by('-created_at')
+        return RestoreRequest.objects.filter(status='Pending').order_by('-created_at')
     except Exception as e:
-        # Table doesn't exist yet - migrations not applied
-        # This will be resolved once migrations are applied
-        pending_restore_requests = RestoreRequest.objects.none()
         if 'no such table' in str(e).lower() or 'does not exist' in str(e).lower():
             messages.warning(request, 'RestoreRequest table not found. Please run: python manage.py migrate')
-    
-    # Get all categories
-    categories = Category.objects.all().order_by('name')
-    
-    # Get deleted items for restore section
-    deleted_users = User.all_objects.filter(is_deleted=True).order_by('-deleted_at')
-    deleted_posts = Post.all_objects.filter(is_deleted=True).order_by('-deleted_at')
-    deleted_categories = Category.all_objects.filter(is_deleted=True).order_by('-deleted_at')
-    
+        return RestoreRequest.objects.none()
+
+
+@role_required(['Admin'])
+def admin_dashboard(request):
+    """Admin home: hub navigation and pending approval queues."""
+    pending_writers = User.objects.filter(role='Writer', is_approved=False).order_by('date_joined')
+    pending_writer_requests = User.objects.filter(role='Reader', writer_request=True).order_by('date_joined')
+    pending_restore_requests = _pending_restore_requests_queryset(request)
+
+    user_count = User.objects.exclude(id=request.user.id).count()
+    post_count = Post.objects.count()
+    category_count = Category.objects.count()
+    deleted_items_total = (
+        User.all_objects.filter(is_deleted=True).count()
+        + Post.all_objects.filter(is_deleted=True).count()
+        + Category.all_objects.filter(is_deleted=True).count()
+    )
+
     context = {
-        'users': users,
-        'posts': posts,
         'pending_writers': pending_writers,
         'pending_writer_requests': pending_writer_requests,
         'pending_restore_requests': pending_restore_requests,
-        'categories': categories,
-        'deleted_users': deleted_users,
-        'deleted_posts': deleted_posts,
-        'deleted_categories': deleted_categories,
+        'user_count': user_count,
+        'post_count': post_count,
+        'category_count': category_count,
+        'deleted_items_total': deleted_items_total,
     }
     return render(request, 'blog/admin_dashboard.html', context)
+
+
+@role_required(['Admin'])
+def admin_manage_users(request):
+    users = User.objects.exclude(id=request.user.id).order_by('-date_joined')
+    return render(request, 'blog/admin_manage_users.html', {'users': users})
+
+
+@role_required(['Admin'])
+def admin_manage_posts(request):
+    posts = Post.objects.all().order_by('-created_at')
+    return render(request, 'blog/admin_manage_posts.html', {'posts': posts})
+
+
+@role_required(['Admin'])
+def admin_manage_categories(request):
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'blog/admin_manage_categories.html', {'categories': categories})
+
+
+@role_required(['Admin'])
+def admin_create_admin_page(request):
+    return render(request, 'blog/admin_create_admin.html', {})
+
+
+@role_required(['Admin'])
+def admin_restore_deleted(request):
+    deleted_users = User.all_objects.filter(is_deleted=True).order_by('-deleted_at')
+    deleted_posts = Post.all_objects.filter(is_deleted=True).order_by('-deleted_at')
+    deleted_categories = Category.all_objects.filter(is_deleted=True).order_by('-deleted_at')
+    return render(
+        request,
+        'blog/admin_restore_deleted.html',
+        {
+            'deleted_users': deleted_users,
+            'deleted_posts': deleted_posts,
+            'deleted_categories': deleted_categories,
+        },
+    )
 

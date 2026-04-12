@@ -4,57 +4,66 @@
 {% block title %}Login - StoryScroll{% endblock %}
 
 {% block content %}
-<section class="login-section">
-  <div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
-    <div class="col-md-6 col-lg-5">
-      <div class="login-card card border-0 shadow-sm rounded-4">
-        <div class="card-body p-4 p-md-5">
+<section class="login-section d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-5">
+        <div class="card border-0">
+          <div class="card-body p-4 p-md-5">
 
-          <!-- Header -->
-          <div class="text-center mb-4">
-            <div class="icon-circle mb-3">
-              <i class="bi bi-pencil-fill text-orange fs-2"></i>
-            </div>
-            <h1 class="fw-bold mb-2">Welcome Back</h1>
-            <p class="text-muted mb-0">Sign in to continue your journey with StoryScroll.</p>
-          </div>
-
-          <!-- Form -->
-          <form method="POST" novalidate>
-            {% csrf_token %}
-
-            <!-- Email -->
-            <div class="mb-3">
-              <label for="username" class="form-label fs-6">
-                Email <span class="text-danger">*</span>
-              </label>
-              <input type="text" class="form-control" id="username" name="username" required placeholder="john@example.com">
+            <!-- Header -->
+            <div class="text-center mb-5">
+              <div class="icon-circle mb-3 d-inline-block p-3 rounded-circle" style="background: rgba(99, 102, 241, 0.1);">
+                <i class="bi bi-person-circle fs-1 text-primary"></i>
+              </div>
+              <h2 class="fw-bold mb-2">Welcome Back</h2>
+              <p class="text-muted mb-0">Sign in to continue your journey</p>
             </div>
 
-            <!-- Password -->
-            <div class="mb-3">
-              <label for="password" class="form-label fs-6">
-                Password <span class="text-danger">*</span>
-              </label>
-              <input type="password" class="form-control" id="password" name="password" required placeholder="********">
-            </div>
+            <!-- Form -->
+            <form method="POST" novalidate>
+              {% csrf_token %}
 
-            <!-- Submit -->
-            <button type="submit" class="btn btn-orange w-100 py-2 rounded-3">
-              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-            </button>
-          </form>
+              <!-- Email -->
+              <div class="mb-4">
+                <label for="username" class="form-label fw-medium text-secondary">
+                  Email <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" id="username" name="username" required placeholder="john@example.com">
+                </div>
+              </div>
 
-          <!-- Footer -->
-          <div class="text-center mt-4">
-            <small class="text-muted">
-              Don't have an account?
-              <a href="{% url 'register_reader' %}" class="text-orange fw-semibold hover-link">
-                Create one here
+              <!-- Password -->
+              <div class="mb-4">
+                <label for="password" class="form-label fw-medium text-secondary">
+                  Password <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                  <input type="password" class="form-control border-start-0 border-end-0 ps-0" id="password" name="password" required placeholder="********" style="border-radius: 0;">
+                  <button class="btn border border-start-0 text-muted" type="button" onclick="togglePassword('password', this)" style="border-color: rgba(0,0,0,0.08) !important; background: rgba(255,255,255,0.8); border-radius: 0 10px 10px 0;">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Submit -->
+              <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 mt-2 shadow-sm fw-bold">
+                Sign In <i class="bi bi-arrow-right ms-2"></i>
+              </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="text-center mt-5">
+              <span class="text-muted">Don't have an account?</span>
+              <a href="{% url 'register_reader' %}" class="fw-bold ms-1 text-decoration-none">
+                Create one now
               </a>
-            </small>
-          </div>
+            </div>
 
+          </div>
         </div>
       </div>
     </div>
@@ -65,50 +74,30 @@
 {% block extra_css %}
 <style>
   .login-section {
-    background: #f9f5ef;
+    background: transparent;
   }
-
-  .login-card {
-    background: #fff;
-    border-radius: 1rem;
+  
+  .input-group-text {
+      border-radius: 10px 0 0 10px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.8) !important;
   }
-
-  .icon-circle {
-    width: 60px;
-    height: 60px;
-    background: #fff8f0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-  }
-
-  .text-orange {
-    color: #f39c12;
-  }
-
-  .btn-orange {
-    background-color: #f39c12;
-    color: #fff;
-    border: none;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-  }
-
-  .btn-orange:hover {
-    background-color: #e0890b;
-    color: #fff;
-  }
-
+  
   input.form-control {
-    border-radius: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid #e1e1e1;
-  }
-
-  .hover-link:hover {
-    text-decoration: underline;
+      /* Handled dynamically by input group */
   }
 </style>
+<script>
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('bi-eye-slash', 'bi-eye');
+  }
+}
+</script>
 {% endblock %}

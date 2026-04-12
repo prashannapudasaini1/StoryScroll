@@ -15,6 +15,11 @@ urlpatterns = [
     
     # Admin routes (using 'system' prefix to avoid conflict with Django admin)
     path('system/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('system/manage/users/', views.admin_manage_users, name='admin_manage_users'),
+    path('system/manage/posts/', views.admin_manage_posts, name='admin_manage_posts'),
+    path('system/manage/categories/', views.admin_manage_categories, name='admin_manage_categories'),
+    path('system/manage/create-admin/', views.admin_create_admin_page, name='admin_create_admin_page'),
+    path('system/manage/restore/', views.admin_restore_deleted, name='admin_restore_deleted'),
     path('system/delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
     path('system/delete-post/<int:post_id>/', views.delete_post_admin, name='delete_post_admin'),
     path('system/approve-writer/<int:user_id>/', views.approve_writer, name='approve_writer'),
